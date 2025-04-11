@@ -54,7 +54,7 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
             // Outbound to other nodes
             ds.broadcast(evt)
             // Relay to self
-            if (evt is PrintableGeneric && server.playerCount > 0) cs.say(evt)
+            if (evt is PrintableGeneric) cs.say(evt)
         }.schedule()
     }
 
@@ -62,9 +62,8 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
     fun onProxyShutdown(event: ProxyShutdownEvent) {
         logger.info("[OnfimVelocity] Shutting down!")
         ds.disable()
-        dScheduler?.cancel()
-        uScheduler?.cancel()
-        sScheduler?.cancel()
+        sListener.disable()
+        uListener.disable()
     }
 
     @Subscribe(priority = 1, order = PostOrder.CUSTOM)

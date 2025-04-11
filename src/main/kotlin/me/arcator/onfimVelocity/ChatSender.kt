@@ -7,7 +7,6 @@ import me.arcator.onfimLib.format.ImageEvt
 import me.arcator.onfimLib.format.PrintableGeneric
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
 import me.arcator.onfimLib.structs.ToggleSet
-import net.kyori.adventure.text.Component
 
 val noRelayPlayers = ToggleSet()
 val noImagePlayers = ToggleSet()
@@ -21,7 +20,7 @@ class ChatSender(private val server: ProxyServer) :
     }
 
     override fun say(evt: Chat) {
-        if (!evt.shouldRelay()) return
+        if (!evt.shouldRelay() || server.playerCount == 0) return
 
         val text = evt.getChatMessage()
         broadcastPlayers()
@@ -33,6 +32,7 @@ class ChatSender(private val server: ProxyServer) :
     }
 
     override fun say(evt: ImageEvt) {
+        if (server.playerCount == 0) return
         for (comp in evt.getLines()) {
             broadcastPlayers()
                 .filter { player -> !noImagePlayers.contains(player.uniqueId) }
@@ -43,7 +43,8 @@ class ChatSender(private val server: ProxyServer) :
     }
 
     override fun say(evt: PrintableGeneric) {
-        val text = Component.text(evt.printString, evt.colour)
+        if (server.playerCount == 0) return
+        val text = evt.getComponent()
         broadcastPlayers().forEach { player ->
             player.sendMessage(text)
         }
