@@ -75,7 +75,7 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
             Chat(
                 plaintext = msg,
                 name = event.player.username,
-                server = if (event.player.currentServer.isPresent) event.player.currentServer.get().serverInfo.name else "Unknown",
+                server = event.player.currentServer.orElse(null).serverInfo?.name ?: "Unknown",
                 uuid = event.player.uniqueId,
             ),
         )
@@ -99,8 +99,7 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
 
     @Subscribe
     fun onDisconnect(event: DisconnectEvent) {
-        val server =
-            if (event.player.currentServer.isPresent) event.player.currentServer.get().server.serverInfo.name else "Velocity"
+        val server = event.player.currentServer.orElse(null)?.server?.serverInfo?.name ?: "Velocity"
         sendEvt(JoinQuit(name = event.player.username, server = server, type = "Quit"))
     }
 }

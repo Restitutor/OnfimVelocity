@@ -25,7 +25,7 @@ class ChatSender(private val server: ProxyServer) :
         val text = evt.getChatMessage()
         broadcastPlayers()
             // Avoid duplicates for different bungees to same server
-            .filter { player -> player.currentServer.get().serverInfo.name != evt.server }
+            .filter { player -> player.currentServer.orElse(null)?.serverInfo?.name != evt.server }
             .forEach { player ->
                 player.sendMessage(text)
             }
