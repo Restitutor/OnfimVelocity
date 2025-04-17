@@ -11,12 +11,10 @@ import me.arcator.onfimLib.structs.ToggleSet
 val noRelayPlayers = ToggleSet()
 val noImagePlayers = ToggleSet()
 
-class ChatSender(private val server: ProxyServer) :
-    ChatSenderInterface {
+class ChatSender(private val server: ProxyServer) : ChatSenderInterface {
 
     private fun broadcastPlayers(): List<Player> {
-        return server.allPlayers
-            .filter { player -> !noRelayPlayers.contains(player.uniqueId) }
+        return server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }
     }
 
     override fun say(evt: Chat) {
@@ -26,9 +24,7 @@ class ChatSender(private val server: ProxyServer) :
         broadcastPlayers()
             // Avoid duplicates for different bungees to same server
             .filter { player -> player.currentServer.orElse(null)?.serverInfo?.name != evt.server }
-            .forEach { player ->
-                player.sendMessage(text)
-            }
+            .forEach { player -> player.sendMessage(text) }
     }
 
     override fun say(evt: ImageEvt) {
@@ -36,17 +32,13 @@ class ChatSender(private val server: ProxyServer) :
         for (comp in evt.getLines()) {
             broadcastPlayers()
                 .filter { player -> !noImagePlayers.contains(player.uniqueId) }
-                .forEach { player ->
-                    player.sendMessage(comp)
-                }
+                .forEach { player -> player.sendMessage(comp) }
         }
     }
 
     override fun say(evt: PrintableGeneric) {
         if (server.playerCount == 0) return
         val text = evt.getComponent()
-        broadcastPlayers().forEach { player ->
-            player.sendMessage(text)
-        }
+        broadcastPlayers().forEach { player -> player.sendMessage(text) }
     }
 }

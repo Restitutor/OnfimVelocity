@@ -24,9 +24,7 @@ import me.arcator.onfimLib.sIn
 import me.arcator.onfimLib.uIn
 import org.slf4j.Logger
 
-@Plugin(
-    id = "onfimvelocity", name = "OnfimVelocity", version = "1.7.0",
-)
+@Plugin(id = "onfimvelocity", name = "OnfimVelocity", version = "1.7.0")
 class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Logger) {
     private val cs = ChatSender(server)
     private var sListener = sIn(cs)
@@ -34,28 +32,34 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
     private val ds = Dispatcher { text ->
         // Debug logger.info(text)
     }
-    var dScheduler: ScheduledTask? = null;
-    var sScheduler: ScheduledTask? = null;
-    var uScheduler: ScheduledTask? = null;
+    var dScheduler: ScheduledTask? = null
+
+    var sScheduler: ScheduledTask? = null
+
+    var uScheduler: ScheduledTask? = null
 
     @Subscribe
     fun onProxyInitialization(event: ProxyInitializeEvent) {
         logger.info("[OnfimVelocity] Starting up!")
 
-        dScheduler = server.scheduler.buildTask(this) { ->
-            ds.pingAll()
-        }.repeat(30, TimeUnit.SECONDS).schedule()
+        dScheduler =
+            server.scheduler
+                .buildTask(this) { -> ds.pingAll() }
+                .repeat(30, TimeUnit.SECONDS)
+                .schedule()
         sScheduler = server.scheduler.buildTask(this, sListener).schedule()
         uScheduler = server.scheduler.buildTask(this, uListener).schedule()
     }
 
     private fun sendEvt(evt: GenericChat) {
-        server.scheduler.buildTask(this) { ->
-            // Outbound to other nodes
-            ds.broadcast(evt)
-            // Relay to self
-            if (evt is PrintableGeneric) cs.say(evt)
-        }.schedule()
+        server.scheduler
+            .buildTask(this) { ->
+                // Outbound to other nodes
+                ds.broadcast(evt)
+                // Relay to self
+                if (evt is PrintableGeneric) cs.say(evt)
+            }
+            .schedule()
     }
 
     @Subscribe
@@ -77,7 +81,7 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
                 name = event.player.username,
                 server = event.player.currentServer.orElse(null).serverInfo?.name ?: "Unknown",
                 uuid = event.player.uniqueId,
-            ),
+            )
         )
     }
 
