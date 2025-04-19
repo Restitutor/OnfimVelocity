@@ -6,12 +6,12 @@ import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ImageEvt
 import me.arcator.onfimLib.format.PrintableGeneric
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
-import me.arcator.onfimLib.structs.ToggleSet
 
-val noRelayPlayers = ToggleSet()
-val noImagePlayers = ToggleSet()
-
-class ChatSender(private val server: ProxyServer) : ChatSenderInterface {
+class ChatSender(
+    private val server: ProxyServer,
+    private val noImagePlayers: UUIDSet,
+    private val noRelayPlayers: UUIDSet,
+) : ChatSenderInterface {
 
     private fun broadcastPlayers(): List<Player> {
         return server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }

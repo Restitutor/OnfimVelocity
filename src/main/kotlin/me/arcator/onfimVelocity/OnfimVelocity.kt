@@ -10,7 +10,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
-import com.velocitypowered.api.scheduler.ScheduledTask
+import java.util.*
 import java.util.concurrent.TimeUnit
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.GenericChat
@@ -22,33 +22,41 @@ import me.arcator.onfimLib.format.Switch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.sIn
 import me.arcator.onfimLib.uIn
+import me.arcator.onfimLib.utils.Unpacker
+import net.kyori.adventure.text.Component
 import org.slf4j.Logger
+
+typealias UUIDSet = MutableSet<UUID>
 
 @Plugin(id = "onfimvelocity", name = "OnfimVelocity", version = "1.7.0")
 class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Logger) {
-    private val cs = ChatSender(server)
-    private var sListener = sIn(cs)
-    private var uListener = uIn(cs)
+    private val noRelayPlayers = mutableSetOf<UUID>()
+    private val noImagePlayers = mutableSetOf<UUID>()
+    private val cs = ChatSender(server, noImagePlayers, noRelayPlayers)
     private val ds = Dispatcher { text ->
         // Debug logger.info(text)
     }
-    var dScheduler: ScheduledTask? = null
+    private val unpacker = Unpacker(cs, ds)
 
-    var sScheduler: ScheduledTask? = null
-
-    var uScheduler: ScheduledTask? = null
+    private var sListener = sIn(unpacker)
+    private var uListener = uIn(unpacker)
 
     @Subscribe
     fun onProxyInitialization(event: ProxyInitializeEvent) {
         logger.info("[OnfimVelocity] Starting up!")
 
-        dScheduler =
-            server.scheduler
-                .buildTask(this) { -> ds.pingAll() }
-                .repeat(30, TimeUnit.SECONDS)
-                .schedule()
-        sScheduler = server.scheduler.buildTask(this, sListener).schedule()
-        uScheduler = server.scheduler.buildTask(this, uListener).schedule()
+        server.scheduler.buildTask(this) { -> ds.pingAll() }.repeat(30, TimeUnit.SECONDS).schedule()
+        server.scheduler.buildTask(this, sListener).schedule()
+        server.scheduler.buildTask(this, uListener).schedule()
+
+        server.commandManager.register(
+            server.commandManager.metaBuilder("toggleimage").plugin(this).build(),
+            ToggleCommand(noImagePlayers, "image"),
+        )
+        server.commandManager.register(
+            server.commandManager.metaBuilder("togglerelay").plugin(this).build(),
+            ToggleCommand(noRelayPlayers, "chat"),
+        )
     }
 
     private fun sendEvt(evt: GenericChat) {
@@ -98,6 +106,13 @@ class OnfimVelocity @Inject constructor(val server: ProxyServer, val logger: Log
         } else { // Join
             val player = event.player
             sendEvt(JoinQuit(name = player.username, server = current, type = "Join"))
+
+            server.scheduler
+                .buildTask(this) { ->
+                    player.sendMessage(Component.text("Remember to read: /nrules | No theft."))
+                }
+                .delay(5L, TimeUnit.SECONDS)
+                .schedule()
         }
     }
 
