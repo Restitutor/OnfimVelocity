@@ -13,12 +13,20 @@ class ChatSender(
     private val noRelayPlayers: UUIDSet,
 ) : ChatSenderInterface {
 
+    private var skipRelay = false
+
     private fun broadcastPlayers(): List<Player> {
         return server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }
     }
 
+    private fun shouldSkip() = (server.playerCount == 0 || skipRelay)
+
+    fun toggle(v: Boolean) {
+        skipRelay = v
+    }
+
     override fun say(evt: Chat) {
-        if (!evt.shouldRelay() || server.playerCount == 0) return
+        if (!evt.shouldRelay() || shouldSkip()) return
 
         val text = evt.getChatMessage()
         broadcastPlayers()
@@ -28,7 +36,7 @@ class ChatSender(
     }
 
     override fun say(evt: ImageEvt) {
-        if (server.playerCount == 0) return
+        if (shouldSkip()) return
         for (comp in evt.getLines()) {
             broadcastPlayers()
                 .filter { player -> !noImagePlayers.contains(player.uniqueId) }
@@ -37,7 +45,7 @@ class ChatSender(
     }
 
     override fun say(evt: PrintableGeneric) {
-        if (server.playerCount == 0) return
+        if (shouldSkip()) return
         val text = evt.getComponent()
         broadcastPlayers().forEach { player -> player.sendMessage(text) }
     }

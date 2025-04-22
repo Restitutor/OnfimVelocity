@@ -6,7 +6,7 @@
 
     <groupId>me.arcator</groupId>
     <artifactId>OnfimVelocity</artifactId>
-    <version>1.7.0</version>
+    <version>1.8.0</version>
     <packaging>jar</packaging>
 
     <name>OnfimVelocity</name>
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>me.arcator.onfimLib</groupId>
             <artifactId>onfimLib</artifactId>
-            <version>1.7.0</version>
+            <version>1.8.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
