@@ -4,7 +4,7 @@ import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ImageEvt
-import me.arcator.onfimLib.format.PrintableGeneric
+import me.arcator.onfimLib.format.PlayerMoveInterface
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
 
 class ChatSender(
@@ -13,7 +13,7 @@ class ChatSender(
     private val noRelayPlayers: UUIDSet,
 ) : ChatSenderInterface {
 
-    private var skipRelay = false
+    var skipRelay = false
 
     private fun broadcastPlayers(): List<Player> {
         return server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }
@@ -31,7 +31,9 @@ class ChatSender(
         val text = evt.getChatMessage()
         broadcastPlayers()
             // Avoid duplicates for different bungees to same server
-            .filter { player -> player.currentServer.orElse(null)?.serverInfo?.name != evt.server }
+            .filter { player ->
+                player.currentServer.orElse(null)?.serverInfo?.name != evt.server.name
+            }
             .forEach { player -> player.sendMessage(text) }
     }
 
@@ -44,7 +46,7 @@ class ChatSender(
         }
     }
 
-    override fun say(evt: PrintableGeneric) {
+    override fun say(evt: PlayerMoveInterface) {
         if (shouldSkip()) return
         val text = evt.getComponent()
         broadcastPlayers().forEach { player -> player.sendMessage(text) }

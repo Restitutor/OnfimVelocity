@@ -20,12 +20,12 @@ class GlobalCommand(private val toggle: (Boolean) -> Unit) : SimpleCommand {
 
         val arg = invocation.arguments().firstOrNull()
         if (arg.equals("off", true)) {
-            toggle(false)
+            toggle(true)
             player.sendMessage(Component.text("Disabled global relay.", NamedTextColor.RED))
             return
         }
         if (arg.equals("on", true)) {
-            toggle(true)
+            toggle(false)
             player.sendMessage(Component.text("Enabled global relay.", NamedTextColor.GREEN))
             return
         }

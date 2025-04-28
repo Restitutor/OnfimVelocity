@@ -19,10 +19,10 @@ class ToggleCommand(private val noPlayers: UUIDSet, private val name: String) : 
         val component =
             if (arg == "off" || (arg == null && !noPlayers.contains(player.uniqueId))) {
                 noPlayers.add(player.uniqueId)
-                Component.text("Disabled inbound $name relay.", NamedTextColor.RED)
+                Component.text("Disabled Discord $name relay.", NamedTextColor.RED)
             } else {
                 noPlayers.remove(player.uniqueId)
-                Component.text("Enabled inbound $name relay.", NamedTextColor.GREEN)
+                Component.text("Enabled Discord $name relay.", NamedTextColor.GREEN)
             }
         player.sendMessage(component)
     }
