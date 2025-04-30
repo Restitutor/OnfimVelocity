@@ -85,7 +85,8 @@ constructor(
                 // Outbound to other nodes
                 ds.broadcast(evt)
                 // Relay to self
-                if (evt is PlayerMoveInterface) cs.say(evt)
+                if (evt is PlayerMoveInterface && evt.type !in hashSetOf("SJoin", "SQuit"))
+                    cs.say(evt)
             }
             .schedule()
     }
