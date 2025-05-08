@@ -4,7 +4,7 @@ import com.velocitypowered.api.command.SimpleCommand
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 
-class GlobalCommand(private val toggle: (Boolean) -> Unit) : SimpleCommand {
+class GlobalCommand(private val toggle: (Boolean, String) -> Unit) : SimpleCommand {
     override fun execute(invocation: SimpleCommand.Invocation) {
         val player = invocation.source()
 
@@ -20,13 +20,15 @@ class GlobalCommand(private val toggle: (Boolean) -> Unit) : SimpleCommand {
 
         val arg = invocation.arguments().firstOrNull()
         if (arg.equals("off", true)) {
-            toggle(true)
-            player.sendMessage(Component.text("Disabled global relay.", NamedTextColor.RED))
+            val text = "Disabled global relay."
+            toggle(true, text)
+            player.sendMessage(Component.text(text, NamedTextColor.RED))
             return
         }
         if (arg.equals("on", true)) {
-            toggle(false)
-            player.sendMessage(Component.text("Enabled global relay.", NamedTextColor.GREEN))
+            val text = "Enabled global relay."
+            toggle(false, text)
+            player.sendMessage(Component.text(text, NamedTextColor.GREEN))
             return
         }
 

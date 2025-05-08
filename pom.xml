@@ -6,7 +6,7 @@
 
     <groupId>me.arcator</groupId>
     <artifactId>OnfimVelocity</artifactId>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <packaging>jar</packaging>
 
     <name>OnfimVelocity</name>
@@ -65,7 +65,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -78,23 +78,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.14.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
-                    <scmCommentPrefix xml:space="preserve">[RELEASE] </scmCommentPrefix>
-                    <goals>install deploy site-deploy
-                    </goals> <!-- install is here to fix javadoc generation in multi-module projects -->
-                    <releaseProfiles>release</releaseProfiles>
                 </configuration>
             </plugin>
         </plugins>
@@ -128,7 +115,7 @@
         <dependency>
             <groupId>me.arcator.onfimLib</groupId>
             <artifactId>onfimLib</artifactId>
-            <version>1.8.0</version>
+            <version>1.8.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -140,6 +127,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
+            <version>2.18.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
             <version>2.18.3</version>
             <scope>compile</scope>
         </dependency>

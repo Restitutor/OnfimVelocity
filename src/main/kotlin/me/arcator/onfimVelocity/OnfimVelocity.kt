@@ -25,6 +25,7 @@ import me.arcator.onfimLib.format.RELAY_CMDS
 import me.arcator.onfimLib.format.SJoin
 import me.arcator.onfimLib.format.SQuit
 import me.arcator.onfimLib.format.SerializedEvent
+import me.arcator.onfimLib.format.ServerMessage
 import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
@@ -75,8 +76,15 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
-            GlobalCommand(cs::toggle),
-        )
+            GlobalCommand {
+                value: Boolean, text: String ->
+                cs.toggle(value)
+                sendEvt(
+                    ServerMessage(
+                        text=text
+                    )
+                )
+        })
     }
 
     private fun sendEvt(evt: SerializedEvent) {
