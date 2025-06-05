@@ -50,12 +50,12 @@ constructor(
     private val unpacker = Unpacker(cs, logger::info)
     private val uListener = UDPIn(unpacker::read)
     private val sListener = SCTPIn(unpacker::read)
-    private val ds: Dispatcher = Dispatcher(logger::info, uListener::port, sListener::port)
+    private val ds: Dispatcher = Dispatcher(logger::info, uListener::port, sListener::port, sListener.ds, uListener.ds)
 
     private val lastServer = HashMap<UUID, String>()
 
     init {
-        unpacker.setOnHeartbeat(ds::getHeartbeat)
+        unpacker.initialize(uListener.ds, ds::getHeartbeat)
     }
 
     @Subscribe(priority = -99)
@@ -102,7 +102,6 @@ constructor(
     @Subscribe(priority = 99)
     fun onProxyShutdown(event: ProxyShutdownEvent) {
         logger.info("[OnfimVelocity] Shutting down!")
-        ds.disable()
         sListener.disable()
         uListener.disable()
         noRelay.save()
@@ -160,7 +159,8 @@ constructor(
             val player = event.player
             sendEvt(makeJoinQuit(username = name, serverName = current, type = "Join"))
 
-            var greet = "Remember to read: /nrules | No theft."
+            // Disable Xaero Minimaps cave view
+            var greet = "Remember to read: /nrules | No theft.§x§a§e§r§o§w§m§n§e§t§h§e§r§i§s§f§a§i§r"
             if (event.player.uniqueId in noRelay.players) {
                 greet += "\nYour Discord relay is off."
             } else if (event.player.uniqueId in noImage.players) {

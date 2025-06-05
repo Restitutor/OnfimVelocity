@@ -1,6 +1,5 @@
 package me.arcator.onfimVelocity
 
-import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ImageEvt
@@ -12,12 +11,10 @@ class ChatSender(
     private val noImagePlayers: UUIDSet,
     private val noRelayPlayers: UUIDSet,
 ) : ChatSenderInterface {
-
     var skipRelay = false
 
-    private fun broadcastPlayers(): List<Player> {
-        return server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }
-    }
+    private fun broadcastPlayers() =
+        server.allPlayers.filter { player -> !noRelayPlayers.contains(player.uniqueId) }
 
     private fun shouldSkip() = (server.playerCount == 0 || skipRelay)
 
@@ -32,9 +29,11 @@ class ChatSender(
         broadcastPlayers()
             // Avoid duplicates for different bungees to same server
             .filter { player ->
-                player.currentServer.orElse(null)?.serverInfo?.name != evt.server.name
-            }
-            .forEach { player -> player.sendMessage(text) }
+                player.currentServer
+                    .orElse(null)
+                    ?.serverInfo
+                    ?.name != evt.server.name
+            }.forEach { player -> player.sendMessage(text) }
     }
 
     override fun say(evt: ImageEvt) {
