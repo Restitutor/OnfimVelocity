@@ -2,10 +2,10 @@ package me.arcator.onfimVelocity.timezone
 
 import java.time.Duration
 import java.time.Instant
-import me.arcator.onfimVelocity.timezone.TCPSock.sendTZRequest
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import me.arcator.onfimVelocity.OnfimVelocity
 
 object Timezone {
     fun formatRelativeTime(unixTimestamp: Long): String {
@@ -35,14 +35,13 @@ object Timezone {
     }
 
 
-    fun getTime(playerName: String, timestamp: Long, mode: Char): String {
-        val response = sendTZRequest(playerName)
-        var zoneId = ZoneId.systemDefault()
+    fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
+        var mark = ""
+        var zoneId = OnfimVelocity.playerTimezones[playerUUID]
 
-        var mark = "."
-        if (!response.isNullOrEmpty()) {
-            zoneId = ZoneId.of(response)
-            mark = ""
+        if(zoneId == null) {
+            mark = "."
+            zoneId = ZoneId.systemDefault()
         }
 
         val calendar = Calendar.getInstance()

@@ -1,6 +1,5 @@
 package me.arcator.onfimVelocity
 
-import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ImageEvt
@@ -10,8 +9,6 @@ import me.arcator.onfimLib.interfaces.ChatSenderInterface
 import me.arcator.onfimVelocity.timezone.Timezone
 import me.arcator.onfimVelocity.timezone.Timezone.extractTimestamp
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextReplacementConfig
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 
 class ChatSender(
     private val server: ProxyServer,
@@ -52,12 +49,12 @@ class ChatSender(
                     var textCpy = ""
                     matches.forEach { match ->
                         run {
-                            var mode = match.toCharArray()[match.length - 2];
+                            var mode = match.toCharArray()[match.length - 2]
                             if(mode.isDigit()) {
                                 mode = '?'
                             }
                             val timestamp = extractTimestamp(match)
-                            var replacement = Timezone.getTime(player.username, timestamp, mode)
+                            var replacement = Timezone.getTime(player.uniqueId, timestamp, mode)
 
                             if(replacement.startsWith(".")) {
                                 replacement = replacement.substring(1)

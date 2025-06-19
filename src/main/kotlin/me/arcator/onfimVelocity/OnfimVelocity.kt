@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.command.CommandExecuteEvent
 import com.velocitypowered.api.event.connection.DisconnectEvent
+import com.velocitypowered.api.event.connection.LoginEvent
 import com.velocitypowered.api.event.player.PlayerChatEvent
 import com.velocitypowered.api.event.player.ServerConnectedEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
@@ -13,6 +14,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import java.nio.file.Path
+import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.TimeUnit
 import me.arcator.onfimLib.SCTPIn
@@ -30,6 +32,7 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
+import me.arcator.onfimVelocity.timezone.TCPSock
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
 
@@ -56,6 +59,11 @@ constructor(
 
     init {
         unpacker.initialize(uListener.ds, ds::getHeartbeat)
+    }
+
+    companion object {
+        @JvmStatic
+        val playerTimezones: MutableMap<UUID, ZoneId> = mutableMapOf()
     }
 
     @Subscribe(priority = -99)
@@ -176,10 +184,25 @@ constructor(
         }
     }
 
+    @Subscribe
+    fun onPlayerProxyConnect(event: LoginEvent) {
+        val player = event.player ?: return
+        val username = player.username ?: return
+        val ip: String? = player.remoteAddress?.address?.hostAddress
+
+        if(player.uniqueId !in playerTimezones) {
+            val timezone = TCPSock.sendAliasTZRequest(username) ?: TCPSock.sendIPTZRequest(ip ?: return) ?: return
+            playerTimezones[player.uniqueId] = ZoneId.of(timezone)
+        }
+    }
+
     @Subscribe(priority = 99)
     fun onDisconnect(event: DisconnectEvent) {
         if (!event.player.isOnlineMode) return
         val fallbackName = lastServer.remove(event.player.uniqueId)
+
+        // Remove timezone
+        playerTimezones.remove(event.player.uniqueId)
 
         val server =
             event.player.currentServer.orElse(null)?.server?.serverInfo?.name ?: fallbackName
