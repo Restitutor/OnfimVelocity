@@ -5,9 +5,10 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
-import me.arcator.onfimVelocity.OnfimVelocity
 
-object Timezone {
+class Timezone {
+    private val playerTimezones: MutableMap<UUID, ZoneId> = mutableMapOf()
+
     private fun formatRelativeTime(unixTimestamp: Long): String {
         if (unixTimestamp == System.currentTimeMillis() / 1000) return "now"
 
@@ -36,7 +37,7 @@ object Timezone {
 
     fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
         var mark = ""
-        var zoneId = OnfimVelocity.playerTimezones[playerUUID]
+        var zoneId = playerTimezones[playerUUID]
 
         if(zoneId == null) {
             mark = "."
@@ -96,5 +97,17 @@ object Timezone {
         val matchResult = regex.find(tag)
 
         return matchResult!!.groups[1]!!.value.toLong()
+    }
+
+    fun addPlayer(uuid: UUID, username: String, ip: String) {
+        if (uuid !in playerTimezones) {
+            val timezone =
+                TCPSock.sendAliasTZRequest(username) ?: TCPSock.sendIPTZRequest(ip) ?: return
+            playerTimezones[uuid] = ZoneId.of(timezone)
+        }
+    }
+
+    fun removeUUID(uuid: UUID) {
+        if (playerTimezones.size > 100) playerTimezones.remove(uuid)
     }
 }

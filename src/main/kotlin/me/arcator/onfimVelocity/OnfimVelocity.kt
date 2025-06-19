@@ -14,7 +14,6 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import java.nio.file.Path
-import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.TimeUnit
 import me.arcator.onfimLib.SCTPIn
@@ -32,7 +31,7 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
-import me.arcator.onfimVelocity.timezone.TCPSock
+import me.arcator.onfimVelocity.timezone.Timezone
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
 
@@ -46,9 +45,10 @@ constructor(
     private val logger: Logger,
     @DataDirectory private val dataDirectory: Path,
 ) {
+    private val tz = Timezone()
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
-    private val cs = ChatSender(server, noImage.players, noRelay.players)
+    private val cs = ChatSender(server, noImage.players, noRelay.players, tz)
 
     private val unpacker = Unpacker(cs, logger::info)
     private val uListener = UDPIn(unpacker::read)
@@ -59,11 +59,6 @@ constructor(
 
     init {
         unpacker.initialize(uListener.ds, ds::getHeartbeat)
-    }
-
-    companion object {
-        @JvmStatic
-        val playerTimezones: MutableMap<UUID, ZoneId> = mutableMapOf()
     }
 
     @Subscribe(priority = -99)
@@ -188,12 +183,11 @@ constructor(
     fun onPlayerProxyConnect(event: LoginEvent) {
         val player = event.player ?: return
         val username = player.username ?: return
-        val ip: String? = player.remoteAddress?.address?.hostAddress
+        val ip = player.remoteAddress?.address?.hostAddress ?: return
+        val uuid = player.uniqueId
 
-        if(player.uniqueId !in playerTimezones) {
-            val timezone = TCPSock.sendAliasTZRequest(username) ?: TCPSock.sendIPTZRequest(ip ?: return) ?: return
-            playerTimezones[player.uniqueId] = ZoneId.of(timezone)
-        }
+        // Run in different thread
+        server.scheduler.run { tz.addPlayer(uuid, username, ip) }
     }
 
     @Subscribe(priority = 99)
@@ -201,14 +195,14 @@ constructor(
         if (!event.player.isOnlineMode) return
         val fallbackName = lastServer.remove(event.player.uniqueId)
 
-        // Remove timezone
-        playerTimezones.remove(event.player.uniqueId)
-
         val server =
             event.player.currentServer.orElse(null)?.server?.serverInfo?.name ?: fallbackName
 
         // Unsuccessful login. Don't print.
         if (server == null) return
+
+        // Remove timezone
+        tz.removeUUID(event.player.uniqueId)
 
         val name = event.player.username
         sendEvt(makeJoinQuit(username = name, serverName = server, type = "Quit"))

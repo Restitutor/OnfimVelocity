@@ -7,13 +7,13 @@ import me.arcator.onfimLib.format.PlayerMoveInterface
 import me.arcator.onfimLib.format.ServerMessage
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
 import me.arcator.onfimVelocity.timezone.Timezone
-import me.arcator.onfimVelocity.timezone.Timezone.extractTimestamp
 import net.kyori.adventure.text.Component
 
 class ChatSender(
     private val server: ProxyServer,
     private val noImagePlayers: UUIDSet,
     private val noRelayPlayers: UUIDSet,
+    private val tz: Timezone
 ) : ChatSenderInterface {
     var skipRelay = false
 
@@ -53,8 +53,8 @@ class ChatSender(
                             if(mode.isDigit()) {
                                 mode = '?'
                             }
-                            val timestamp = extractTimestamp(match)
-                            var replacement = Timezone.getTime(player.uniqueId, timestamp, mode)
+                            val timestamp = tz.extractTimestamp(match)
+                            var replacement = tz.getTime(player.uniqueId, timestamp, mode)
 
                             if(replacement.startsWith(".")) {
                                 replacement = replacement.substring(1)
