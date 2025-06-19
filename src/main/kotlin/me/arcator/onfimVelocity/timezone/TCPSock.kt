@@ -14,8 +14,6 @@ object TCPSock {
         """{"requestType": "RequestType.TIMEZONE_FROM_ALIAS_REQUEST", "data": {"alias":"%s"}}"""
     private const val IP_REQUEST_TEMPLATE =
         """{"requestType": "RequestType.TIMEZONE_FROM_IP_REQUEST", "data": {"ip":"%s"}}"""
-    private val sock = Socket("apollo", 8888)
-
 
     fun sendAliasTZRequest(playerName: String): String? {
         val requestData = ALIAS_REQUEST_TEMPLATE.format(playerName.lowercase())
@@ -31,30 +29,27 @@ object TCPSock {
 
     private fun sendTZBotRequest(data: String): Map<String, String>? {
         return try {
-            // Safely use single shared socket
-            synchronized(this) {
-                sock.use { socket ->
-                    val out = PrintWriter(socket.getOutputStream(), true)
-                    out.println(data)
-                    out.flush()
+            Socket("apollo", 8888).use { socket ->
+                val out = PrintWriter(socket.getOutputStream(), true)
+                out.println(data)
+                out.flush()
 
-                    val response = BufferedReader(
-                        InputStreamReader(
-                            socket.getInputStream(),
-                            StandardCharsets.UTF_8
-                        )
-                    ).use { it.readText() }
+                val response = BufferedReader(
+                    InputStreamReader(
+                        socket.getInputStream(),
+                        StandardCharsets.UTF_8,
+                    ),
+                ).use { it.readText() }
 
-                    val jsonElement = Json.parseToJsonElement(response)
-                    val jsonObject = jsonElement.jsonObject
+                val jsonElement = Json.parseToJsonElement(response)
+                val jsonObject = jsonElement.jsonObject
 
-                    val responseMap = jsonObject.mapValues { it.value.toString() }
+                val responseMap = jsonObject.mapValues { it.value.toString() }
 
-                    if (responseMap["code"]!!.toInt() != 200) {
-                        return null
-                    }
-                    responseMap
+                if (responseMap["code"]!!.toInt() != 200) {
+                    return null
                 }
+                responseMap
             }
         } catch (e: IOException) {
             e.printStackTrace()

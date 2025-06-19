@@ -53,7 +53,8 @@ constructor(
     private val unpacker = Unpacker(cs, logger::info)
     private val uListener = UDPIn(unpacker::read)
     private val sListener = SCTPIn(unpacker::read)
-    private val ds: Dispatcher = Dispatcher(logger::info, uListener::port, sListener::port, sListener.ds, uListener.ds)
+    private val ds: Dispatcher =
+        Dispatcher(logger::info, uListener::port, sListener::port, sListener.ds, uListener.ds)
 
     private val lastServer = HashMap<UUID, String>()
 
@@ -79,15 +80,15 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
-            GlobalCommand {
-                value: Boolean, text: String ->
+            GlobalCommand { value: Boolean, text: String ->
                 cs.toggle(value)
                 sendEvt(
                     ServerMessage(
-                        text=text
-                    )
+                        text = text,
+                    ),
                 )
-        })
+            },
+        )
     }
 
     private fun sendEvt(evt: SerializedEvent) {
@@ -124,9 +125,9 @@ constructor(
                 user = ChatUser(player.username, uuid = player.uniqueId),
                 server =
                     EventLocation(
-                        name = player.currentServer.orElse(null).serverInfo?.name ?: "Unknown"
+                        name = player.currentServer.orElse(null).serverInfo?.name ?: "Unknown",
                     ),
-            )
+            ),
         )
     }
 
@@ -166,7 +167,8 @@ constructor(
             sendEvt(makeJoinQuit(username = name, serverName = current, type = "Join"))
 
             // Disable Xaero Minimaps cave view
-            var greet = "Remember to read: /nrules | No theft.§x§a§e§r§o§w§m§n§e§t§h§e§r§i§s§f§a§i§r"
+            var greet =
+                "Remember to read: /nrules | No theft.§x§a§e§r§o§w§m§n§e§t§h§e§r§i§s§f§a§i§r"
             if (event.player.uniqueId in noRelay.players) {
                 greet += "\nYour Discord relay is off."
             } else if (event.player.uniqueId in noImage.players) {

@@ -13,7 +13,7 @@ class GlobalCommand(private val toggle: (Boolean, String) -> Unit) : SimpleComma
                 Component.text(
                     "You do not have permission to toggle the global relay. Use /togglerelay instead.",
                     NamedTextColor.RED,
-                )
+                ),
             )
             return
         }

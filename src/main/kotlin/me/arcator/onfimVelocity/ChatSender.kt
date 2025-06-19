@@ -43,20 +43,20 @@ class ChatSender(
         val regex = "<t:\\d{1,20}:?[fFDdtTR]?>".toRegex()
         val matches = regex.findAll(plainText).map { it.value }.toList()
 
-        if(matches.isNotEmpty()) {
+        if (matches.isNotEmpty()) {
             filteredPlayers.forEach { player ->
                 run {
                     var textCpy = ""
                     matches.forEach { match ->
                         run {
                             var mode = match.toCharArray()[match.length - 2]
-                            if(mode.isDigit()) {
+                            if (mode.isDigit()) {
                                 mode = '?'
                             }
                             val timestamp = tz.extractTimestamp(match)
                             var replacement = tz.getTime(player.uniqueId, timestamp, mode)
 
-                            if(replacement.startsWith(".")) {
+                            if (replacement.startsWith(".")) {
                                 replacement = replacement.substring(1)
                                 replacement += " (set your timezone with /mytimezone set <timezone> <your mc username in lowercase> to get personalized time)"
                             }

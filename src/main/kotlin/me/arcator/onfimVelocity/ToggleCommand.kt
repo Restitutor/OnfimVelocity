@@ -7,7 +7,11 @@ import kotlin.jvm.optionals.getOrNull
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 
-class ToggleCommand(private val getPlayer: (String) -> Optional<Player>, private val noPlayers: UUIDSet, private val name: String) : SimpleCommand {
+class ToggleCommand(
+    private val getPlayer: (String) -> Optional<Player>,
+    private val noPlayers: UUIDSet,
+    private val name: String
+) : SimpleCommand {
     override fun execute(invocation: SimpleCommand.Invocation) {
         val source = invocation.source()
 
@@ -20,7 +24,7 @@ class ToggleCommand(private val getPlayer: (String) -> Optional<Player>, private
                 p = source
             } else {
                 source.sendMessage(
-                    Component.text("No player provided!", NamedTextColor.RED)
+                    Component.text("No player provided!", NamedTextColor.RED),
                 )
                 return
             }

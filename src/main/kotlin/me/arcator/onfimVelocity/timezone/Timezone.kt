@@ -26,20 +26,26 @@ class Timezone {
         val seconds = duration.seconds % 60
 
         val result = StringBuilder()
-        if (years > 0) result.append(years).append(" year").append(if (years > 1) "s" else "").append(", ")
-        if (days > 0) result.append(days).append(" day").append(if (days > 1) "s" else "").append(", ")
-        if (hours > 0) result.append(hours).append(" hour").append(if (hours > 1) "s" else "").append(", ")
-        if (minutes > 0) result.append(minutes).append(" minute").append(if (minutes > 1) "s" else "").append(", ")
-        if (seconds > 0) result.append(seconds).append(" second").append(if (seconds > 1) "s" else "")
+        if (years > 0) result.append(years).append(" year").append(if (years > 1) "s" else "")
+            .append(", ")
+        if (days > 0) result.append(days).append(" day").append(if (days > 1) "s" else "")
+            .append(", ")
+        if (hours > 0) result.append(hours).append(" hour").append(if (hours > 1) "s" else "")
+            .append(", ")
+        if (minutes > 0) result.append(minutes).append(" minute")
+            .append(if (minutes > 1) "s" else "").append(", ")
+        if (seconds > 0) result.append(seconds).append(" second")
+            .append(if (seconds > 1) "s" else "")
 
-        return result.toString().replace(", $".toRegex(), "") + (if (isFuture) " from now" else " ago")
+        return result.toString()
+            .replace(", $".toRegex(), "") + (if (isFuture) " from now" else " ago")
     }
 
     fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
         var mark = ""
         var zoneId = playerTimezones[playerUUID]
 
-        if(zoneId == null) {
+        if (zoneId == null) {
             mark = "."
             zoneId = ZoneId.systemDefault()
         }
@@ -50,42 +56,61 @@ class Timezone {
 
         when (mode) {
             '?' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy").format(calendar.toInstant().atZone(zoneId))
-                val time = DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
+                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    .format(calendar.toInstant().atZone(zoneId))
+                val time =
+                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
                 return "$mark$date at $time"
             }
+
             'f' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy").format(calendar.toInstant().atZone(zoneId))
-                val time = DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
+                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    .format(calendar.toInstant().atZone(zoneId))
+                val time =
+                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
                 return "$mark$date at $time"
             }
+
             'F' -> {
                 val dayInt = calendar[Calendar.DAY_OF_WEEK]
-                val day = if (dayInt == Calendar.SUNDAY) "Sunday" else if (dayInt == Calendar.MONDAY) "Monday" else if (dayInt == Calendar.TUESDAY) "Tuesday" else if (dayInt == Calendar.WEDNESDAY) "Wednesday" else if (dayInt == Calendar.THURSDAY) "Thursday" else if (dayInt == Calendar.FRIDAY) "Friday" else "Saturday"
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy").format(calendar.toInstant().atZone(zoneId))
-                val time = DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
+                val day =
+                    if (dayInt == Calendar.SUNDAY) "Sunday" else if (dayInt == Calendar.MONDAY) "Monday" else if (dayInt == Calendar.TUESDAY) "Tuesday" else if (dayInt == Calendar.WEDNESDAY) "Wednesday" else if (dayInt == Calendar.THURSDAY) "Thursday" else if (dayInt == Calendar.FRIDAY) "Friday" else "Saturday"
+                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    .format(calendar.toInstant().atZone(zoneId))
+                val time =
+                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
 
                 return "$mark$day, $date at $time"
             }
+
             'd' -> {
-                val date = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(calendar.toInstant().atZone(zoneId))
+                val date = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    .format(calendar.toInstant().atZone(zoneId))
                 return "$mark$date"
             }
+
             'D' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy").format(calendar.toInstant().atZone(zoneId))
+                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    .format(calendar.toInstant().atZone(zoneId))
                 return "$mark$date"
             }
+
             't' -> {
-                val time = DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
+                val time =
+                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
                 return "$mark$time"
             }
+
             'T' -> {
-                val time = DateTimeFormatter.ofPattern("HH:mm:ss").format(calendar.toInstant().atZone(zoneId))
+                val time = DateTimeFormatter.ofPattern("HH:mm:ss")
+                    .format(calendar.toInstant().atZone(zoneId))
                 return "$mark$time"
             }
+
             'R' -> {
                 return formatRelativeTime(timestamp)
             }
+
             else -> {
                 return ""
             }
