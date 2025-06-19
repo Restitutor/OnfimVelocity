@@ -8,7 +8,7 @@ import java.util.*
 import me.arcator.onfimVelocity.OnfimVelocity
 
 object Timezone {
-    fun formatRelativeTime(unixTimestamp: Long): String {
+    private fun formatRelativeTime(unixTimestamp: Long): String {
         if (unixTimestamp == System.currentTimeMillis() / 1000) return "now"
 
         val timestamp = Instant.ofEpochSecond(unixTimestamp)
@@ -33,7 +33,6 @@ object Timezone {
 
         return result.toString().replace(", $".toRegex(), "") + (if (isFuture) " from now" else " ago")
     }
-
 
     fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
         var mark = ""
@@ -91,6 +90,7 @@ object Timezone {
             }
         }
     }
+
     fun extractTimestamp(tag: String): Long {
         val regex = Regex("<t:(\\d+):([fFDdtTR])>")
         val matchResult = regex.find(tag)
