@@ -129,7 +129,8 @@ class Chat(
             // Disable all emojification on this line if there's mg (flag would override it)
             if (msg.contains(":mg:")) return msg
 
-            return EmojiManager.replaceAliases(msg
+            return EmojiManager.replaceAliases(
+                msg,
             ) { alias, emojis ->
                 emojis.stream().filter { emoji -> emoji.discordAliases.contains(alias) }
                     .findFirst().orElseThrow { IllegalStateException() }.emoji

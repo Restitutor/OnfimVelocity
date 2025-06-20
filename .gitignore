@@ -1,12 +1,12 @@
 # User-specific stuff
 .idea/
 
+sync.sh
+upload.sh
+
 *.iml
 *.ipr
 *.iws
-
-# IntelliJ
-out/
 
 # Compiled class file
 *.class
@@ -101,3 +101,6 @@ target/
 build/
 .gradle/
 kls_database.db
+gradlew.bat
+gradlew
+gradle/wrapper/
