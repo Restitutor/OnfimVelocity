@@ -99,5 +99,5 @@ target/
 
 # Gradle
 build/
-gradle/
+.gradle/
 kls_database.db

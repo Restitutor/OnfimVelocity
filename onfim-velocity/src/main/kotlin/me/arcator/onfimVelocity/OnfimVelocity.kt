@@ -37,7 +37,7 @@ import org.slf4j.Logger
 
 typealias UUIDSet = MutableSet<UUID>
 
-@Plugin(id = "onfimvelocity", name = "OnfimVelocity", version = "1.8.1")
+@Plugin(id = "onfimvelocity", name = "OnfimVelocity", version = "1.8.2")
 class OnfimVelocity
 @Inject
 constructor(
