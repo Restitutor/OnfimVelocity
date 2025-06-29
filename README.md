@@ -114,7 +114,7 @@ Images are:
    - Username-based lookup from external service
    - IP geolocation fallback
 2. Discord timestamps (`<t:timestamp:format>`) are automatically converted
-3. Players without timezone data see UTC with setup instructions
+3. Players without timezone data see system time with setup instructions
 
 ### Development Setup
 
