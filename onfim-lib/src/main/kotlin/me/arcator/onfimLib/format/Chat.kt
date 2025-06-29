@@ -15,7 +15,7 @@ val RELAY_CMDS = hashSetOf("me", "eme", "broadcast", "bc", "say", "alert")
 
 // #arcator, #arcator test, #ssmp, #polls
 val DISCORD_CHANNELS = hashSetOf(
-    System.getenv("discord_main_channel"),
+    System.getenv("ARC_ID"),
     "1364820197801988099",
     "197512800950681600",
     "749467873491157062",
@@ -69,7 +69,7 @@ class Chat(
     private fun inGame() =
         ((platform == "Discord" && room.id in DISCORD_CHANNELS) ||
             (platform == "Onfim" && room.id == "#arcator") ||
-            (platform == "Matrix" && room.id == System.getenv("matrix_main_channel")) ||
+            (platform == "Matrix" && room.id == System.getenv("MATRIX_MAIN_CHANNEL")) ||
             platform == "In-Game")
 
     fun shouldShow() = inGame()

@@ -3,7 +3,7 @@ package me.arcator.onfimLib.format
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
 
-val RES_ID: UUID = UUID.fromString(System.getenv("res_id"))
+val RES_ID: UUID = UUID.fromString(System.getenv("RES_MC_ID"))
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class ChatRoom(val id: String = "#arcator", val name: String? = null)

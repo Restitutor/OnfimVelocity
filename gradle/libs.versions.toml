@@ -2,7 +2,6 @@
 kotlin = "2.2.0-RC3"
 velocity = "3.4.0-SNAPSHOT"
 jackson = "2.19.0"
-okhttp = "4.12.0"
 jemoji = "1.7.4"
 minedown = "1.7.4-SNAPSHOT"
 msgpack = "0.9.9"
@@ -15,14 +14,13 @@ kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8" }
 jackson-msgpack = { group = "org.msgpack", name = "jackson-dataformat-msgpack", version.ref = "msgpack" }
 jackson-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jackson" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 jemoji = { group = "net.fellbaum", name = "jemoji", version.ref = "jemoji" }
 minedown = { group = "de.themoep", name = "minedown-adventure", version.ref = "minedown" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json-jvm", version.ref = "kotlinx-serialization" }
 
 [bundles]
 jackson = ["jackson-msgpack", "jackson-kotlin", "jackson-core"]
-common-libs = ["okhttp", "jemoji", "minedown"]
+common-libs = ["jemoji", "minedown"]
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

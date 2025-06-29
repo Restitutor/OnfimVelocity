@@ -27,6 +27,7 @@ import me.arcator.onfimLib.format.SJoin
 import me.arcator.onfimLib.format.SQuit
 import me.arcator.onfimLib.format.SerializedEvent
 import me.arcator.onfimLib.format.ServerMessage
+import me.arcator.onfimLib.format.cleanName
 import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
@@ -122,7 +123,7 @@ constructor(
         sendEvt(
             Chat(
                 plaintext = msg,
-                user = ChatUser(player.username, uuid = player.uniqueId),
+                user = ChatUser(cleanName(player.username), uuid = player.uniqueId),
                 server =
                     EventLocation(
                         name = player.currentServer.orElse(null).serverInfo?.name ?: "Unknown",

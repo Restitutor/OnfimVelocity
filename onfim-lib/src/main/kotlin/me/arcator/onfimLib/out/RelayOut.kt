@@ -7,7 +7,6 @@ import me.arcator.onfimLib.format.SerializedEvent
 import me.arcator.onfimLib.format.ServerMessage
 import me.arcator.onfimLib.format.Switch
 import me.arcator.onfimLib.utils.RELAY_PORT
-import me.arcator.onfimLib.utils.bind_ip
 import me.arcator.onfimLib.utils.hostnameTitle
 
 class RelayOut(
@@ -49,6 +48,6 @@ class RelayOut(
     }
 
     private fun send(text: String) {
-        unicast(text.toByteArray(StandardCharsets.UTF_8), Pair(bind_ip, RELAY_PORT))
+        unicast(text.toByteArray(StandardCharsets.UTF_8), Pair("relay", RELAY_PORT))
     }
 }

@@ -63,7 +63,7 @@ class Unpacker(
 
     fun sendUdpMessage(serialized: ByteArray) {
         // Relay it to the web console backend for visualizing
-        val ipAddress = InetAddress.getByName(System.getenv("onfim_console_host"))
+        val ipAddress = InetAddress.getByName("apollo")
         try {
             // Bind socket
             synchronized(this) { ->

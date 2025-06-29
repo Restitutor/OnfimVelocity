@@ -20,8 +20,10 @@ class JoinQuit(
     }
 }
 
+fun cleanName(username: String) = if (username === "RestitutorOrb") "Restitutor" else username
+
 fun makeJoinQuit(username: String, serverName: String, type: String) =
-    JoinQuit(username, server = EventLocation(name = serverName), type = type)
+    JoinQuit(cleanName(username), server = EventLocation(name = serverName), type = type)
 
 class Switch(
     val username: String,
@@ -35,7 +37,7 @@ class Switch(
 
     override fun printString(): String {
         val vc = if (game) "" else " [VC]"
-        return "${username}$vc moved from $fromServer to ${server.name}"
+        return "${cleanName(username)}$vc moved from $fromServer to ${server.name}"
     }
 }
 
