@@ -127,7 +127,7 @@ class Timezone {
     fun addPlayer(uuid: UUID, username: String, ip: String) {
         if (uuid !in playerTimezones) {
             val timezone =
-                TCPSock.sendAliasTZRequest(username) ?: TCPSock.sendIPTZRequest(ip) ?: return
+                TZRequests.sendAliasTZRequest(username) ?: TZRequests.sendIPTZRequest(ip) ?: return
             playerTimezones[uuid] = ZoneId.of(timezone)
         }
     }
