@@ -1,3 +1,2 @@
-First install https://github.com/Restitutor/OnfimLib
-
-Then run `mvn clean package` to produce the jar file
+# To build the jar
+gradle :onfim-velocity:build
