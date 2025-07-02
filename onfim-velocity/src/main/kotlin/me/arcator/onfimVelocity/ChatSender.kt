@@ -40,22 +40,26 @@ class ChatSender(
                     ?.name != evt.server.name
             }
 
-        val regex = "<t:(\\d{1,20})(?::([fFdDtTrR]))?>".toRegex()
+        val regex = "<t:(\\d{1,13})(?::([fFdDtTrR]))?>".toRegex()
         val matches = regex.findAll(evt.plaintext).toList()
 
         if (matches.isNotEmpty()) {
             val substrTimestampMode = matches.map { match ->
                 val substr = match.value
-                val timestamp = match.groups[1]!!.value.toLong()
-                val mode = match.groups[2]?.value?.get(0) ?: '?'
+                var timestamp: Long? = match.groups[1]!!.value.toLong()
+                val mode = match.groups[2]?.value?.get(0) ?: 'f'
+
+                // If timestamp is bigger than discord max timestamp
+                if(timestamp!! > 8640000000000L) timestamp = null
+
                 Triple(substr, timestamp, mode)
             }
 
             filteredPlayers.forEach { player ->
                 var chatMessage = evt.getChatMessage()
 
-                substrTimestampMode.forEach { triple ->
-                    val replacement = tz.getTime(player.uniqueId, triple.second, triple.third)
+                substrTimestampMode.forEach start@{ triple ->
+                    val replacement = tz.getTime(player.uniqueId, triple.second ?: return@start, triple.third)
 
                     val config = TextReplacementConfig.builder()
                         .match(triple.first)

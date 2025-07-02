@@ -43,61 +43,30 @@ class Timezone {
 
     fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
         val zoneId = playerTimezones[playerUUID] ?: ZoneId.systemDefault()
-
-        val calendar = Calendar.getInstance()
-        calendar.timeZone = TimeZone.getTimeZone(zoneId)
-        calendar.time = Date.from(Instant.ofEpochSecond(timestamp))
+        val requestedInstant = Instant.ofEpochSecond(timestamp)
 
         when (mode) {
-            '?' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                    .format(calendar.toInstant().atZone(zoneId))
-                val time =
-                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-                return "$date at $time"
-            }
+            'f' -> return DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm")
+                .format(requestedInstant.atZone(zoneId))
 
-            'f' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                    .format(calendar.toInstant().atZone(zoneId))
-                val time =
-                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-                return "$date at $time"
-            }
-
-            'F' -> {
-                val dayInt = calendar[Calendar.DAY_OF_WEEK]
-                val day =
-                    if (dayInt == Calendar.SUNDAY) "Sunday" else if (dayInt == Calendar.MONDAY) "Monday" else if (dayInt == Calendar.TUESDAY) "Tuesday" else if (dayInt == Calendar.WEDNESDAY) "Wednesday" else if (dayInt == Calendar.THURSDAY) "Thursday" else if (dayInt == Calendar.FRIDAY) "Friday" else "Saturday"
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                    .format(calendar.toInstant().atZone(zoneId))
-                val time =
-                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-
-                return "$day, $date at $time"
-            }
+            'F' -> return DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy 'at' HH:mm")
+                .format(requestedInstant.atZone(zoneId))
 
             'd' -> return DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                .format(calendar.toInstant().atZone(zoneId))
+                .format(requestedInstant.atZone(zoneId))
 
             'D' -> return DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                .format(calendar.toInstant().atZone(zoneId))
+                .format(requestedInstant.atZone(zoneId))
 
             't' -> return DateTimeFormatter.ofPattern("HH:mm")
-                .format(calendar.toInstant().atZone(zoneId))
+                .format(requestedInstant.atZone(zoneId))
 
-            'T' -> {
-                val time = DateTimeFormatter.ofPattern("HH:mm:ss")
-                    .format(calendar.toInstant().atZone(zoneId))
-                return time
-            }
+            'T' -> DateTimeFormatter.ofPattern("HH:mm:ss")
+                .format(requestedInstant.atZone(zoneId))
 
             'R' -> return formatRelativeTime(timestamp)
-
-            else -> {
-                return ""
-            }
         }
+        return ""
     }
 
     fun addPlayer(uuid: UUID, username: String, ip: String) {
