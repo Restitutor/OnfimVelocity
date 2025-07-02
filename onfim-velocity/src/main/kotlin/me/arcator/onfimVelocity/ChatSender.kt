@@ -8,6 +8,7 @@ import me.arcator.onfimLib.format.ServerMessage
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
 import me.arcator.onfimVelocity.timezone.Timezone
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextReplacementConfig
 
 class ChatSender(
     private val server: ProxyServer,
@@ -39,33 +40,32 @@ class ChatSender(
                     ?.name != evt.server.name
             }
 
-        val plainText = String(evt.plaintext.toCharArray()) // Copy
-        val regex = "<t:\\d{1,20}:?[fFDdtTR]?>".toRegex()
-        val matches = regex.findAll(plainText).map { it.value }.toList()
+        val regex = "<t:(\\d{1,20})(?::([fFdDtTrR]))?>".toRegex()
+        val matches = regex.findAll(evt.plaintext).toList()
 
         if (matches.isNotEmpty()) {
+            val substrTimestampMode = matches.map { match ->
+                val substr = match.value
+                val timestamp = match.groups[1]!!.value.toLong()
+                val mode = match.groups[2]?.value?.get(0) ?: '?'
+                Triple(substr, timestamp, mode)
+            }
+
             filteredPlayers.forEach { player ->
-                run {
-                    var textCpy = ""
-                    matches.forEach { match ->
-                        run {
-                            var mode = match.toCharArray()[match.length - 2]
-                            if (mode.isDigit()) {
-                                mode = '?'
-                            }
-                            val timestamp = tz.extractTimestamp(match)
-                            var replacement = tz.getTime(player.uniqueId, timestamp, mode)
+                var chatMessage = evt.getChatMessage()
 
-                            if (replacement.startsWith(".")) {
-                                replacement = replacement.substring(1)
-                                replacement += " (set your timezone with /mytimezone set <timezone> <your mc username in lowercase> to get personalized time)"
-                            }
+                substrTimestampMode.forEach { triple ->
+                    val replacement = tz.getTime(player.uniqueId, triple.second, triple.third)
 
-                            textCpy = plainText.replace(match, replacement)
-                        }
-                    }
-                    player.sendMessage(Component.text(textCpy).style(text.style()))
+                    val config = TextReplacementConfig.builder()
+                        .match(triple.first)
+                        .replacement(Component.text(replacement))
+                        .build()
+
+                    chatMessage = chatMessage.replaceText(config)
                 }
+
+                player.sendMessage(chatMessage)
             }
         } else {
             filteredPlayers.forEach { player ->

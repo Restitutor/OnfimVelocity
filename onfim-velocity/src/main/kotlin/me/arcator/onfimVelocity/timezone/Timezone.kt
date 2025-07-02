@@ -42,13 +42,7 @@ class Timezone {
     }
 
     fun getTime(playerUUID: UUID, timestamp: Long, mode: Char): String {
-        var mark = ""
-        var zoneId = playerTimezones[playerUUID]
-
-        if (zoneId == null) {
-            mark = "."
-            zoneId = ZoneId.systemDefault()
-        }
+        val zoneId = playerTimezones[playerUUID] ?: ZoneId.systemDefault()
 
         val calendar = Calendar.getInstance()
         calendar.timeZone = TimeZone.getTimeZone(zoneId)
@@ -60,7 +54,7 @@ class Timezone {
                     .format(calendar.toInstant().atZone(zoneId))
                 val time =
                     DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-                return "$mark$date at $time"
+                return "$date at $time"
             }
 
             'f' -> {
@@ -68,7 +62,7 @@ class Timezone {
                     .format(calendar.toInstant().atZone(zoneId))
                 val time =
                     DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-                return "$mark$date at $time"
+                return "$date at $time"
             }
 
             'F' -> {
@@ -80,48 +74,30 @@ class Timezone {
                 val time =
                     DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
 
-                return "$mark$day, $date at $time"
+                return "$day, $date at $time"
             }
 
-            'd' -> {
-                val date = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    .format(calendar.toInstant().atZone(zoneId))
-                return "$mark$date"
-            }
+            'd' -> return DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                .format(calendar.toInstant().atZone(zoneId))
 
-            'D' -> {
-                val date = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                    .format(calendar.toInstant().atZone(zoneId))
-                return "$mark$date"
-            }
+            'D' -> return DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                .format(calendar.toInstant().atZone(zoneId))
 
-            't' -> {
-                val time =
-                    DateTimeFormatter.ofPattern("HH:mm").format(calendar.toInstant().atZone(zoneId))
-                return "$mark$time"
-            }
+            't' -> return DateTimeFormatter.ofPattern("HH:mm")
+                .format(calendar.toInstant().atZone(zoneId))
 
             'T' -> {
                 val time = DateTimeFormatter.ofPattern("HH:mm:ss")
                     .format(calendar.toInstant().atZone(zoneId))
-                return "$mark$time"
+                return time
             }
 
-            'R' -> {
-                return formatRelativeTime(timestamp)
-            }
+            'R' -> return formatRelativeTime(timestamp)
 
             else -> {
                 return ""
             }
         }
-    }
-
-    fun extractTimestamp(tag: String): Long {
-        val regex = Regex("<t:(\\d+):([fFDdtTR])>")
-        val matchResult = regex.find(tag)
-
-        return matchResult!!.groups[1]!!.value.toLong()
     }
 
     fun addPlayer(uuid: UUID, username: String, ip: String) {
