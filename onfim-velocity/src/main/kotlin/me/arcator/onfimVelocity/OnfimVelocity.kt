@@ -134,14 +134,12 @@ constructor(
 
     @Subscribe(priority = 99)
     fun onPlayerChat(event: PlayerChatEvent) {
-        if (!event.player.isOnlineMode) return
         sendChat(event.message, event.player)
     }
 
     @Subscribe(priority = -99)
     fun onCommand(event: CommandExecuteEvent) {
         val player = event.commandSource as? Player ?: return
-        if (!player.isOnlineMode) return
 
         // Extract base command without arguments
         val command = event.command.substringBefore(" ")
@@ -154,7 +152,6 @@ constructor(
     fun onConnect(event: ServerConnectedEvent) {
         val current = event.server.serverInfo.name
         lastServer[event.player.uniqueId] = current
-        if (!event.player.isOnlineMode) return
 
         val name = event.player.username
         if (event.previousServer.isPresent) {
@@ -195,7 +192,6 @@ constructor(
 
     @Subscribe(priority = 99)
     fun onDisconnect(event: DisconnectEvent) {
-        if (!event.player.isOnlineMode) return
         val fallbackName = lastServer.remove(event.player.uniqueId)
 
         val server =
