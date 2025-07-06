@@ -8,6 +8,7 @@ import java.util.*
 
 class Timezone {
     private val playerTimezones: MutableMap<UUID, ZoneId> = mutableMapOf()
+    private val timezoneOverrides: MutableMap<UUID, ZoneId> = mutableMapOf()
 
     private fun formatRelativeTime(unixTimestamp: Long): String {
         if (unixTimestamp == System.currentTimeMillis() / 1000) return "now"
@@ -69,15 +70,34 @@ class Timezone {
         return ""
     }
 
-    fun addPlayer(uuid: UUID, username: String, ip: String) {
+    fun addPlayer(uuid: UUID, ip: String) {
+        if(uuid in timezoneOverrides) playerTimezones[uuid] = timezoneOverrides[uuid]!!
         if (uuid !in playerTimezones) {
             val timezone =
-                TZRequests.sendAliasTZRequest(username) ?: TZRequests.sendIPTZRequest(ip) ?: return
+                TZRequests.sendTZFromUUID(uuid) ?: TZRequests.sendIPTZRequest(ip) ?: return
             playerTimezones[uuid] = ZoneId.of(timezone)
         }
     }
 
+    fun getPlayerTimezone(uuid: UUID): ZoneId {
+        return playerTimezones[uuid]!!
+    }
+
+    fun addTimezone(uuid: UUID, timezone: String) {
+        playerTimezones[uuid] = ZoneId.of(timezone)
+    }
+
     fun removeUUID(uuid: UUID) {
-        if (playerTimezones.size > 100) playerTimezones.remove(uuid)
+        playerTimezones.remove(uuid)
+    }
+
+    fun setOverrides(map: Map<UUID, String>) {
+        map.mapValues { (key, value) ->
+            timezoneOverrides[key] = ZoneId.of(value)
+        }
+    }
+
+    fun removeOverride(uuid: UUID) {
+        timezoneOverrides.remove(uuid)
     }
 }

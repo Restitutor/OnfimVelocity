@@ -32,7 +32,9 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
+import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
+import me.arcator.onfimVelocity.timezone.command.TimezoneCommand
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
 
@@ -80,6 +82,10 @@ constructor(
             ToggleCommand(server::getPlayer, noRelay.players, "chat"),
         )
         server.commandManager.register(
+            server.commandManager.metaBuilder("timezone").aliases("tz").plugin(this).build(),
+            TimezoneCommand(tz).createTimezoneCommand()
+        )
+        server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
             GlobalCommand { value: Boolean, text: String ->
                 cs.toggle(value)
@@ -90,6 +96,9 @@ constructor(
                 )
             },
         )
+
+        // Add TZ Overrides
+        server.scheduler.run { tz.setOverrides(TZRequests.sendTZOverridesRequest()) }
     }
 
     private fun sendEvt(evt: SerializedEvent) {
@@ -182,12 +191,11 @@ constructor(
     @Subscribe
     fun onPlayerProxyConnect(event: LoginEvent) {
         val player = event.player ?: return
-        val username = player.username ?: return
         val ip = player.remoteAddress?.address?.hostAddress ?: return
         val uuid = player.uniqueId
 
         // Run in different thread
-        server.scheduler.run { tz.addPlayer(uuid, username, ip) }
+        server.scheduler.run { tz.addPlayer(uuid, ip) }
     }
 
     @Subscribe(priority = 99)
