@@ -1,5 +1,6 @@
 package me.arcator.onfimVelocity.timezone
 
+import java.io.File
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -99,5 +100,30 @@ class Timezone {
 
     fun removeOverride(uuid: UUID) {
         timezoneOverrides.remove(uuid)
+    }
+
+    companion object {
+        val TIMEZONES = fetchTimezones()
+        val TIMEZONES_STRING: List<String> = TIMEZONES.map { "${it["area"]}/${it["city"]}" }
+
+        private fun fetchTimezones(): List<Map<String, String>> {
+            val parentDir = "/usr/share/zoneinfo/"
+            val files = mutableListOf<Map<String, String>>()
+            File(parentDir).walk().forEach { file ->
+                if ("posix" in file.path || "right" in file.path) {
+                    return@forEach
+                }
+                if (file.isFile) {
+                    val relativePath = file.relativeTo(File(parentDir)).path
+                    if ("/" in relativePath) {
+                        files.add(mapOf(
+                            "area" to relativePath.split("/")[0],
+                            "city" to relativePath.split("/").last()
+                        ))
+                    }
+                }
+            }
+            return files
+        }
     }
 }
