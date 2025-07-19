@@ -10,6 +10,7 @@ import java.net.URI
 import java.util.*
 import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
+import me.arcator.onfimVelocity.timezone.Timezone.Companion.TIMEZONES
 import me.arcator.onfimVelocity.timezone.Timezone.Companion.TIMEZONES_STRING
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
@@ -30,7 +31,7 @@ class TimezoneCommand(private val tz: Timezone) {
                     .suggests { _, builder ->
                         val input = builder.remaining.lowercase(Locale.getDefault())
                         val alreadySuggested: MutableList<String> = mutableListOf()
-                        Timezone.TIMEZONES.iterator()
+                        TIMEZONES.iterator()
                             .asSequence()
                             .filter { it["city"]?.lowercase(Locale.getDefault())!!.startsWith(input) }
                             .map { "${it["area"]}/${it["city"]}" }
@@ -38,7 +39,7 @@ class TimezoneCommand(private val tz: Timezone) {
                                 builder.suggest(text)
                                 alreadySuggested.add(text)
                             }
-                        Timezone.TIMEZONES.iterator()
+                        TIMEZONES.iterator()
                             .asSequence()
                             .filter { it["area"]?.lowercase(Locale.getDefault())!!.startsWith(input) }
                             .map { "${it["area"]}/${it["city"]}" }
@@ -56,7 +57,7 @@ class TimezoneCommand(private val tz: Timezone) {
 
     private fun linkUserId(source: CommandSource): Int {
         if(source is Player) {
-            val code: String? = TZRequests.sendUserIdUUIDLinkPost(source.uniqueId)
+            val code: String? = TZRequests.sendUserIdUUIDLinkPost(source.uniqueId, tz.getPlayerTimezone(source.uniqueId))
             if(code == null){
                 source.sendMessage(Component.text("Failed to create a code for you. Maybe you are already linked?").color(NamedTextColor.RED))
                 return Command.SINGLE_SUCCESS

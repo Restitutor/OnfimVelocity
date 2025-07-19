@@ -7,6 +7,7 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -21,7 +22,7 @@ object TZRequests {
     private const val TZ_OVERRIDE_REMOVE_TEMPLATE =
         """{"requestType": "TIMEZONE_OVERRIDE_REMOVE", "data": {"uuid": "%s"}}"""
     private const val USER_ID_UUID_LINK_POST_TEMPLATE =
-        """{"requestType": "USER_ID_UUID_LINK_POST", "data": {"uuid": "%s"}}"""
+        """{"requestType": "USER_ID_UUID_LINK_POST", "data": {"uuid": "%s", "timezone": "%s"}}"""
     private const val UUID_TIMEZONE_REQUEST =
         """{"requestType": "TIMEZONE_FROM_UUID", "data": {"uuid":"%s"}}"""
 
@@ -49,8 +50,8 @@ object TZRequests {
         return responseMap["code"]!!.toInt() == 200
     }
 
-    fun sendUserIdUUIDLinkPost(uuid: UUID): String? {
-        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(uuid.toString())
+    fun sendUserIdUUIDLinkPost(uuid: UUID, timezone: ZoneId): String? {
+        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(uuid.toString(), timezone.toString())
         val responseMap = sendTZBotRequest(requestData) ?: return null
         if(responseMap["code"]!!.toInt() == 200) return responseMap["message"].toString().replace("\"", "")
         return null
