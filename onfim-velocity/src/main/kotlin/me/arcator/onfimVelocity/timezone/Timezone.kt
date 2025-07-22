@@ -105,6 +105,7 @@ class Timezone {
     companion object {
         val TIMEZONES = fetchTimezones()
         val TIMEZONES_STRING: List<String> = TIMEZONES.map { "${it["area"]}/${it["city"]}" }
+        val API_KEY = System.getenv("API_KEY") ?: ""
 
         private fun fetchTimezones(): List<Map<String, String>> {
             val parentDir = "/usr/share/zoneinfo/"

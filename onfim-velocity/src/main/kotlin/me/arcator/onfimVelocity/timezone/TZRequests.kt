@@ -14,51 +14,51 @@ import kotlinx.serialization.json.jsonObject
 
 object TZRequests {
     private const val IP_REQUEST_TEMPLATE =
-        """{"requestType": "TIMEZONE_FROM_IP", "data": {"ip":"%s"}}"""
+        """{"requestType": "TIMEZONE_FROM_IP", "apiKey": "%s", "data": {"ip": "%s"}}"""
     private const val TZ_OVERRIDES_POST_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDES_POST", "data": {"%s": "%s"}}"""
+        """{"requestType": "TIMEZONE_OVERRIDES_POST", "apiKey": "%s", "data": {"%s": "%s"}}"""
     private const val TZ_OVERRIDES_GET_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDES_GET", "data": {}}"""
+        """{"requestType": "TIMEZONE_OVERRIDES_GET", "apiKey": "%s", "data": {}}"""
     private const val TZ_OVERRIDE_REMOVE_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDE_REMOVE", "data": {"uuid": "%s"}}"""
+        """{"requestType": "TIMEZONE_OVERRIDE_REMOVE", "apiKey": "%s", "data": {"uuid": "%s"}}"""
     private const val USER_ID_UUID_LINK_POST_TEMPLATE =
-        """{"requestType": "USER_ID_UUID_LINK_POST", "data": {"uuid": "%s", "timezone": "%s"}}"""
+        """{"requestType": "USER_ID_UUID_LINK_POST", "apiKey": "%s", "data": {"uuid": "%s", "timezone": "%s"}}"""
     private const val UUID_TIMEZONE_REQUEST =
-        """{"requestType": "TIMEZONE_FROM_UUID", "data": {"uuid":"%s"}}"""
+        """{"requestType": "TIMEZONE_FROM_UUID", "apiKey": "%s", "data": {"uuid":"%s"}}"""
 
     fun sendIPTZRequest(ip: String): String? {
-        val requestData = IP_REQUEST_TEMPLATE.format(ip)
+        val requestData = IP_REQUEST_TEMPLATE.format(Timezone.API_KEY, ip)
         val responseMap = sendTZBotRequest(requestData) ?: return null
         return responseMap["message"]!!.replace("\"", "")
     }
 
     fun sendTZFromUUID(uuid: UUID): String? {
-        val requestData = UUID_TIMEZONE_REQUEST.format(uuid.toString())
+        val requestData = UUID_TIMEZONE_REQUEST.format(Timezone.API_KEY, uuid.toString())
         val responseMap = sendTZBotRequest(requestData) ?: return null
         return responseMap["message"]!!.replace("\"", "")
     }
 
     fun sendTZOverridePost(uuid: UUID, timezone: String): Boolean {
-        val requestData = TZ_OVERRIDES_POST_TEMPLATE.format(uuid.toString(), timezone)
+        val requestData = TZ_OVERRIDES_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone)
         val responseMap = sendTZBotRequest(requestData) ?: return false
         return responseMap["code"]!!.toInt() == 200
     }
 
     fun sendTZOverrideRemove(uuid: UUID): Boolean {
-        val requestData = TZ_OVERRIDE_REMOVE_TEMPLATE.format(uuid.toString())
+        val requestData = TZ_OVERRIDE_REMOVE_TEMPLATE.format(Timezone.API_KEY, uuid.toString())
         val responseMap = sendTZBotRequest(requestData) ?: return false
         return responseMap["code"]!!.toInt() == 200
     }
 
     fun sendUserIdUUIDLinkPost(uuid: UUID, timezone: ZoneId): String? {
-        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(uuid.toString(), timezone.toString())
+        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone.toString())
         val responseMap = sendTZBotRequest(requestData) ?: return null
         if(responseMap["code"]!!.toInt() == 200) return responseMap["message"].toString().replace("\"", "")
         return null
     }
 
     fun sendTZOverridesRequest(): Map<UUID, String> {
-        val responseMap = sendTZBotRequest(TZ_OVERRIDES_GET_TEMPLATE) ?: return mapOf()
+        val responseMap = sendTZBotRequest(TZ_OVERRIDES_GET_TEMPLATE.format(Timezone.API_KEY)) ?: return mapOf()
         if(responseMap["code"]!!.toInt() == 200) {
             val gson = Gson()
             val tempMap: Map<String, String> = gson.fromJson(responseMap["message"], object : TypeToken<Map<String, String>>() {}.type)
