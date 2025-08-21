@@ -36,6 +36,8 @@ import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
 import me.arcator.onfimVelocity.timezone.command.TimezoneCommand
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import org.slf4j.Logger
 
 typealias UUIDSet = MutableSet<UUID>
@@ -194,8 +196,10 @@ constructor(
         val ip = player.remoteAddress?.address?.hostAddress ?: return
         val uuid = player.uniqueId
 
-        // Run in different thread
-        server.scheduler.run { tz.addPlayer(uuid, ip) }
+        if (!tz.addPlayer(uuid, ip)) {
+            player.sendMessage(Component.text("We have failed to retrieve your timezone.").color(
+                NamedTextColor.RED))
+        }
     }
 
     @Subscribe(priority = 99)

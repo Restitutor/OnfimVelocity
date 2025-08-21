@@ -71,13 +71,12 @@ class Timezone {
         return ""
     }
 
-    fun addPlayer(uuid: UUID, ip: String) {
+    fun addPlayer(uuid: UUID, ip: String): Boolean {
         if(uuid in timezoneOverrides) playerTimezones[uuid] = timezoneOverrides[uuid]!!
-        if (uuid !in playerTimezones) {
-            val timezone =
-                TZRequests.sendTZFromUUID(uuid) ?: TZRequests.sendIPTZRequest(ip) ?: return
-            playerTimezones[uuid] = ZoneId.of(timezone)
-        }
+        val timezone =
+            TZRequests.sendTZFromUUID(uuid) ?: TZRequests.sendIPTZRequest(ip) ?: return false
+        playerTimezones[uuid] = ZoneId.of(timezone)
+        return true
     }
 
     fun getPlayerTimezone(uuid: UUID): ZoneId {

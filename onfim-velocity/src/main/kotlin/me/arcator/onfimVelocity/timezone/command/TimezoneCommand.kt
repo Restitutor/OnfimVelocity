@@ -49,7 +49,9 @@ class TimezoneCommand(private val tz: Timezone) {
                     }
                     .executes { ctx: CommandContext<CommandSource> -> setUserTimezone(ctx.source, ctx.getArgument("timezone", String::class.java)) }))
             .then(BrigadierCommand.literalArgumentBuilder("clearTimezone")
-                .executes {ctx: CommandContext<CommandSource> -> removeOverride(ctx.source)})
+                .executes { ctx: CommandContext<CommandSource> -> removeOverride(ctx.source) })
+            .then(BrigadierCommand.literalArgumentBuilder("refreshTimezone")
+                .executes { ctx: CommandContext<CommandSource> -> refreshTimezone(ctx.source) })
             .build()
 
         return BrigadierCommand(timezoneNode)
@@ -120,9 +122,25 @@ class TimezoneCommand(private val tz: Timezone) {
                 return Command.SINGLE_SUCCESS
             }
             tz.removeOverride(uuid)
-            tz.removeUUID(uuid)
             tz.addPlayer(uuid, source.remoteAddress.address.hostAddress)
             source.sendMessage(Component.text("Timezone override was cleared!").color(NamedTextColor.GREEN))
+        } else {
+            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+        }
+        return Command.SINGLE_SUCCESS
+    }
+
+    private fun refreshTimezone(source: CommandSource): Int {
+        if(source is Player) {
+            val uuid: UUID = source.uniqueId
+            val ip = source.remoteAddress?.address?.hostAddress ?: return Command.SINGLE_SUCCESS
+
+            if (!tz.addPlayer(uuid, ip)) {
+                source.sendMessage(Component.text("We failed to retrieve your timezone.").color(
+                    NamedTextColor.RED))
+            }
+            source.sendMessage(Component.text("Timezone refreshed successfully!").color(
+                NamedTextColor.GREEN))
         } else {
             source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
         }
