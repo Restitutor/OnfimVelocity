@@ -25,6 +25,10 @@ object TZRequests {
         """{"requestType": "USER_ID_UUID_LINK_POST", "apiKey": "%s", "data": {"uuid": "%s", "timezone": "%s"}}"""
     private const val UUID_TIMEZONE_REQUEST =
         """{"requestType": "TIMEZONE_FROM_UUID", "apiKey": "%s", "data": {"uuid":"%s"}}"""
+    private const val IS_LINKED_TEMPLATE =
+        """{"requestType": "IS_LINKED", "apiKey": "%s", "data": {"uuid":"%s"}}"""
+    private const val USER_ID_FROM_UUID_TEMPLATE =
+        """{"requestType": "USER_ID_FROM_UUID", "apiKey": "%s", "data": {"uuid":"%s"}}"""
 
     fun sendIPTZRequest(ip: String): String? {
         val requestData = IP_REQUEST_TEMPLATE.format(Timezone.API_KEY, ip)
@@ -102,6 +106,19 @@ object TZRequests {
             e.printStackTrace()
             null
         }
+    }
+
+    fun sendIsLinkedRequest(uuid: UUID): Boolean {
+        val requestData = IS_LINKED_TEMPLATE.format(Timezone.API_KEY, uuid.toString())
+        val responseMap = sendTZBotRequest(requestData) ?: return false
+        return responseMap["code"]!!.toInt() == 200
+    }
+
+    fun sendUserIDFromUUID(uuid: UUID): String? {
+        val requestData = USER_ID_FROM_UUID_TEMPLATE.format(Timezone.API_KEY, uuid.toString())
+        val responseMap = sendTZBotRequest(requestData) ?: return null
+        if(responseMap["code"]!!.toInt() == 200) return responseMap["message"]!!.replace("\"", "")
+        return null
     }
 }
 

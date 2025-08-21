@@ -85,7 +85,7 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("timezone").aliases("tz").plugin(this).build(),
-            TimezoneCommand(tz).createTimezoneCommand()
+            TimezoneCommand(this, server, tz).createTimezoneCommand()
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),

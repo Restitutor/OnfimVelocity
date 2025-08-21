@@ -6,8 +6,11 @@ import com.mojang.brigadier.context.CommandContext
 import com.velocitypowered.api.command.BrigadierCommand
 import com.velocitypowered.api.command.CommandSource
 import com.velocitypowered.api.proxy.Player
+import com.velocitypowered.api.proxy.ProxyServer
 import java.net.URI
 import java.util.*
+import java.util.concurrent.TimeUnit
+import me.arcator.onfimVelocity.OnfimVelocity
 import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
 import me.arcator.onfimVelocity.timezone.Timezone.Companion.TIMEZONES
@@ -18,7 +21,7 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 
-class TimezoneCommand(private val tz: Timezone) {
+class TimezoneCommand(private val plugin: OnfimVelocity, private val server: ProxyServer, private val tz: Timezone) {
     fun createTimezoneCommand(): BrigadierCommand {
         val timezoneNode = BrigadierCommand.literalArgumentBuilder("timezone")
             .requires { source: CommandSource -> source is Player }
@@ -84,6 +87,21 @@ class TimezoneCommand(private val tz: Timezone) {
                 .append(codeComponent)
 
             source.sendMessage(message)
+
+            var runTimes = 180
+            server.scheduler.buildTask(plugin) { task ->
+                if(runTimes == 0){
+                    task.cancel()
+                    source.sendMessage(Component.text("Your code has expired.").color(NamedTextColor.RED))
+                }
+                else if(TZRequests.sendIsLinkedRequest(source.uniqueId)) {
+                    task.cancel()
+                    val discordId = TZRequests.sendUserIDFromUUID(source.uniqueId)!!
+                    source.sendMessage(Component.text("Your accounts have been linked successfully! (Discord account ID: %s)".format(discordId)).color(NamedTextColor.GREEN))
+                }
+                --runTimes
+            }.repeat(5L, TimeUnit.SECONDS)
+                .schedule()
         }
         return Command.SINGLE_SUCCESS
     }
