@@ -18,7 +18,7 @@ object TZRequests {
     private const val TZ_OVERRIDES_POST_TEMPLATE =
         """{"requestType": "TIMEZONE_OVERRIDES_POST", "apiKey": "%s", "data": {"%s": "%s"}}"""
     private const val TZ_OVERRIDES_GET_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDES_GET", "apiKey": "%s", "data": {}}"""
+        """{"requestType": "TIMEZONE_OVERRIDES_GET", "apiKey": "%s"}"""
     private const val TZ_OVERRIDE_REMOVE_TEMPLATE =
         """{"requestType": "TIMEZONE_OVERRIDE_REMOVE", "apiKey": "%s", "data": {"uuid": "%s"}}"""
     private const val USER_ID_UUID_LINK_POST_TEMPLATE =
