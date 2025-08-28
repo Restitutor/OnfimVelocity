@@ -127,9 +127,8 @@ constructor(
     }
 
     private fun sendChat(rawMsg: String, player: Player) {
+        if (rawMsg.isEmpty() || "jndi:ldap" in rawMsg || cs.skipRelay || player.uniqueId in noRelay.players) return
         val msg: String = Chat.fromMessage(rawMsg)
-        if (msg.isEmpty() || cs.skipRelay || player.uniqueId in noRelay.players) return
-
         sendEvt(
             Chat(
                 plaintext = msg,
@@ -160,8 +159,9 @@ constructor(
         // Extract base command without arguments
         val command = event.command.substringBefore(" ")
 
+        if ("jndi:ldap" in event.command) event.result = CommandExecuteEvent.CommandResult.denied()
         // Relay if publicly visible. Prepend / for special parsing.
-        if (command in RELAY_CMDS) sendChat("/${event.command}", player)
+        else if (command in RELAY_CMDS) sendChat("/${event.command}", player)
     }
 
     @Subscribe(priority = 99)
