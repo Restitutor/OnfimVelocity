@@ -8,7 +8,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import java.time.ZoneId
-import java.util.UUID
+import java.util.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
@@ -43,7 +43,8 @@ object TZRequests {
     }
 
     fun sendTZOverridePost(uuid: UUID, timezone: String): Boolean {
-        val requestData = TZ_OVERRIDES_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone)
+        val requestData =
+            TZ_OVERRIDES_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone)
         val responseMap = sendTZBotRequest(requestData) ?: return false
         return responseMap["code"]!!.toInt() == 200
     }
@@ -55,17 +56,26 @@ object TZRequests {
     }
 
     fun sendUserIdUUIDLinkPost(uuid: UUID, timezone: ZoneId): String? {
-        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone.toString())
+        val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(
+            Timezone.API_KEY,
+            uuid.toString(),
+            timezone.toString(),
+        )
         val responseMap = sendTZBotRequest(requestData) ?: return null
-        if(responseMap["code"]!!.toInt() == 200) return responseMap["message"].toString().replace("\"", "")
+        if (responseMap["code"]!!.toInt() == 200) return responseMap["message"].toString()
+            .replace("\"", "")
         return null
     }
 
     fun sendTZOverridesRequest(): Map<UUID, String> {
-        val responseMap = sendTZBotRequest(TZ_OVERRIDES_GET_TEMPLATE.format(Timezone.API_KEY)) ?: return mapOf()
-        if(responseMap["code"]!!.toInt() == 200) {
+        val responseMap =
+            sendTZBotRequest(TZ_OVERRIDES_GET_TEMPLATE.format(Timezone.API_KEY)) ?: return mapOf()
+        if (responseMap["code"]!!.toInt() == 200) {
             val gson = Gson()
-            val tempMap: Map<String, String> = gson.fromJson(responseMap["message"], object : TypeToken<Map<String, String>>() {}.type)
+            val tempMap: Map<String, String> = gson.fromJson(
+                responseMap["message"],
+                object : TypeToken<Map<String, String>>() {}.type,
+            )
 
             return tempMap.mapNotNull { (key, value) ->
                 try {
@@ -90,7 +100,8 @@ object TZRequests {
                 val receivePacket = DatagramPacket(buffer, buffer.size)
                 socket.soTimeout = 3000
                 socket.receive(receivePacket)
-                val response = String(receivePacket.data, 0, receivePacket.length, StandardCharsets.UTF_8)
+                val response =
+                    String(receivePacket.data, 0, receivePacket.length, StandardCharsets.UTF_8)
 
                 val jsonElement = Json.parseToJsonElement(response)
                 val jsonObject = jsonElement.jsonObject
@@ -117,7 +128,7 @@ object TZRequests {
     fun sendUserIDFromUUID(uuid: UUID): String? {
         val requestData = USER_ID_FROM_UUID_TEMPLATE.format(Timezone.API_KEY, uuid.toString())
         val responseMap = sendTZBotRequest(requestData) ?: return null
-        if(responseMap["code"]!!.toInt() == 200) return responseMap["message"]!!.replace("\"", "")
+        if (responseMap["code"]!!.toInt() == 200) return responseMap["message"]!!.replace("\"", "")
         return null
     }
 }

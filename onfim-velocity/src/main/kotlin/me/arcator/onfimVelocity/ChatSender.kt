@@ -50,7 +50,7 @@ class ChatSender(
                 val mode = match.groups[2]?.value?.get(0) ?: 'f'
 
                 // If timestamp is bigger than discord max timestamp
-                if(timestamp!! > 8640000000000L) timestamp = null
+                if (timestamp!! > 8640000000000L) timestamp = null
 
                 Triple(substr, timestamp, mode)
             }
@@ -59,7 +59,8 @@ class ChatSender(
                 var chatMessage = evt.getChatMessage()
 
                 substrTimestampMode.forEach start@{ triple ->
-                    val replacement = tz.getTime(player.uniqueId, triple.second ?: return@start, triple.third)
+                    val replacement =
+                        tz.getTime(player.uniqueId, triple.second ?: return@start, triple.third)
 
                     val config = TextReplacementConfig.builder()
                         .match(triple.first)

@@ -21,50 +21,84 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 
-class TimezoneCommand(private val plugin: OnfimVelocity, private val server: ProxyServer, private val tz: Timezone) {
+class TimezoneCommand(
+    private val plugin: OnfimVelocity,
+    private val server: ProxyServer,
+    private val tz: Timezone
+) {
     fun createTimezoneCommand(): BrigadierCommand {
         val timezoneNode = BrigadierCommand.literalArgumentBuilder("timezone")
             .requires { source: CommandSource -> source is Player }
             .executes { ctx: CommandContext<CommandSource> -> getTimezone(ctx.source) }
-            .then(BrigadierCommand.literalArgumentBuilder("link")
-                .executes { ctx: CommandContext<CommandSource> -> linkUserId(ctx.source) })
-            .then(BrigadierCommand.literalArgumentBuilder("setTimezone")
-                .then(BrigadierCommand.requiredArgumentBuilder("timezone", StringArgumentType.greedyString())
-                    // Velocity inablilty fix
-                    .suggests { _, builder ->
-                        val input = builder.remaining.lowercase(Locale.getDefault())
-                        val alreadySuggested: MutableList<String> = mutableListOf()
-                        TIMEZONES.iterator()
-                            .asSequence()
-                            .filter { it["city"]?.lowercase(Locale.getDefault())!!.startsWith(input) }
-                            .map { "${it["area"]}/${it["city"]}" }
-                            .onEach { text ->
-                                builder.suggest(text)
-                                alreadySuggested.add(text)
+            .then(
+                BrigadierCommand.literalArgumentBuilder("link")
+                    .executes { ctx: CommandContext<CommandSource> -> linkUserId(ctx.source) },
+            )
+            .then(
+                BrigadierCommand.literalArgumentBuilder("setTimezone")
+                    .then(
+                        BrigadierCommand.requiredArgumentBuilder(
+                            "timezone",
+                            StringArgumentType.greedyString(),
+                        )
+                            // Velocity inablilty fix
+                            .suggests { _, builder ->
+                                val input = builder.remaining.lowercase(Locale.getDefault())
+                                val alreadySuggested: MutableList<String> = mutableListOf()
+                                TIMEZONES.iterator()
+                                    .asSequence()
+                                    .filter {
+                                        it["city"]?.lowercase(Locale.getDefault())!!
+                                            .startsWith(input)
+                                    }
+                                    .map { "${it["area"]}/${it["city"]}" }
+                                    .onEach { text ->
+                                        builder.suggest(text)
+                                        alreadySuggested.add(text)
+                                    }
+                                TIMEZONES.iterator()
+                                    .asSequence()
+                                    .filter {
+                                        it["area"]?.lowercase(Locale.getDefault())!!
+                                            .startsWith(input)
+                                    }
+                                    .map { "${it["area"]}/${it["city"]}" }
+                                    .filterNot { alreadySuggested.contains(it) }
+                                    .forEach { builder.suggest(it) }
+                                builder.buildFuture()
                             }
-                        TIMEZONES.iterator()
-                            .asSequence()
-                            .filter { it["area"]?.lowercase(Locale.getDefault())!!.startsWith(input) }
-                            .map { "${it["area"]}/${it["city"]}" }
-                            .filterNot { alreadySuggested.contains(it) }
-                            .forEach { builder.suggest(it) }
-                        builder.buildFuture()
-                    }
-                    .executes { ctx: CommandContext<CommandSource> -> setUserTimezone(ctx.source, ctx.getArgument("timezone", String::class.java)) }))
-            .then(BrigadierCommand.literalArgumentBuilder("clearTimezone")
-                .executes { ctx: CommandContext<CommandSource> -> removeOverride(ctx.source) })
-            .then(BrigadierCommand.literalArgumentBuilder("refreshTimezone")
-                .executes { ctx: CommandContext<CommandSource> -> refreshTimezone(ctx.source) })
+                            .executes { ctx: CommandContext<CommandSource> ->
+                                setUserTimezone(
+                                    ctx.source,
+                                    ctx.getArgument("timezone", String::class.java),
+                                )
+                            },
+                    ),
+            )
+            .then(
+                BrigadierCommand.literalArgumentBuilder("clearTimezone")
+                    .executes { ctx: CommandContext<CommandSource> -> removeOverride(ctx.source) },
+            )
+            .then(
+                BrigadierCommand.literalArgumentBuilder("refreshTimezone")
+                    .executes { ctx: CommandContext<CommandSource> -> refreshTimezone(ctx.source) },
+            )
             .build()
 
         return BrigadierCommand(timezoneNode)
     }
 
     private fun linkUserId(source: CommandSource): Int {
-        if(source is Player) {
-            val code: String? = TZRequests.sendUserIdUUIDLinkPost(source.uniqueId, tz.getPlayerTimezone(source.uniqueId))
-            if(code == null){
-                source.sendMessage(Component.text("Failed to create a code for you. Maybe you are already linked?").color(NamedTextColor.RED))
+        if (source is Player) {
+            val code: String? = TZRequests.sendUserIdUUIDLinkPost(
+                source.uniqueId,
+                tz.getPlayerTimezone(source.uniqueId),
+            )
+            if (code == null) {
+                source.sendMessage(
+                    Component.text("Failed to create a code for you. Maybe you are already linked?")
+                        .color(NamedTextColor.RED),
+                )
                 return Command.SINGLE_SUCCESS
             }
             val msg = Component.text("Your authentication code is ")
@@ -90,14 +124,21 @@ class TimezoneCommand(private val plugin: OnfimVelocity, private val server: Pro
 
             var runTimes = 180
             server.scheduler.buildTask(plugin) { task ->
-                if(runTimes == 0){
+                if (runTimes == 0) {
                     task.cancel()
-                    source.sendMessage(Component.text("Your code has expired.").color(NamedTextColor.RED))
-                }
-                else if(TZRequests.sendIsLinkedRequest(source.uniqueId)) {
+                    source.sendMessage(
+                        Component.text("Your code has expired.").color(NamedTextColor.RED),
+                    )
+                } else if (TZRequests.sendIsLinkedRequest(source.uniqueId)) {
                     task.cancel()
                     val discordId = TZRequests.sendUserIDFromUUID(source.uniqueId)!!
-                    source.sendMessage(Component.text("Your accounts have been linked successfully! (Discord account ID: %s)".format(discordId)).color(NamedTextColor.GREEN))
+                    source.sendMessage(
+                        Component.text(
+                            "Your accounts have been linked successfully! (Discord account ID: %s)".format(
+                                discordId,
+                            ),
+                        ).color(NamedTextColor.GREEN),
+                    )
                 }
                 --runTimes
             }.repeat(5L, TimeUnit.SECONDS)
@@ -107,60 +148,82 @@ class TimezoneCommand(private val plugin: OnfimVelocity, private val server: Pro
     }
 
     private fun getTimezone(source: CommandSource): Int {
-        if(source is Player) {
+        if (source is Player) {
             val timezone: String = tz.getPlayerTimezone(source.uniqueId).id
-            source.sendMessage(Component.text("Your current timezone is: $timezone").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Your current timezone is: $timezone").color(NamedTextColor.GREEN),
+            )
         } else {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
         }
         return Command.SINGLE_SUCCESS
     }
 
     private fun setUserTimezone(source: CommandSource, timezone: String): Int {
-        if(timezone !in TIMEZONES_STRING) {
+        if (timezone !in TIMEZONES_STRING) {
             source.sendMessage(Component.text("Wrong timezone!").color(NamedTextColor.RED))
             return Command.SINGLE_SUCCESS
         }
-        if(source is Player) {
+        if (source is Player) {
             val uuid: UUID = source.uniqueId
             TZRequests.sendTZOverridePost(uuid, timezone)
             tz.addTimezone(source.uniqueId, timezone)
-            source.sendMessage(Component.text("Your timezone has been changed!").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Your timezone has been changed!").color(NamedTextColor.GREEN),
+            )
         } else {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
         }
         return Command.SINGLE_SUCCESS
     }
 
     private fun removeOverride(source: CommandSource): Int {
-        if(source is Player) {
+        if (source is Player) {
             val uuid: UUID = source.uniqueId
-            if(!TZRequests.sendTZOverrideRemove(uuid)) {
-                source.sendMessage(Component.text("There's nothing to remove!").color(NamedTextColor.RED))
+            if (!TZRequests.sendTZOverrideRemove(uuid)) {
+                source.sendMessage(
+                    Component.text("There's nothing to remove!").color(NamedTextColor.RED),
+                )
                 return Command.SINGLE_SUCCESS
             }
             tz.removeOverride(uuid)
             tz.addPlayer(uuid, source.remoteAddress.address.hostAddress)
-            source.sendMessage(Component.text("Timezone override was cleared!").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Timezone override was cleared!").color(NamedTextColor.GREEN),
+            )
         } else {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
         }
         return Command.SINGLE_SUCCESS
     }
 
     private fun refreshTimezone(source: CommandSource): Int {
-        if(source is Player) {
+        if (source is Player) {
             val uuid: UUID = source.uniqueId
             val ip = source.remoteAddress?.address?.hostAddress ?: return Command.SINGLE_SUCCESS
 
             if (!tz.addPlayer(uuid, ip)) {
-                source.sendMessage(Component.text("We failed to retrieve your timezone.").color(
-                    NamedTextColor.RED))
+                source.sendMessage(
+                    Component.text("We failed to retrieve your timezone.").color(
+                        NamedTextColor.RED,
+                    ),
+                )
             }
-            source.sendMessage(Component.text("Timezone refreshed successfully!").color(
-                NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Timezone refreshed successfully!").color(
+                    NamedTextColor.GREEN,
+                ),
+            )
         } else {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
         }
         return Command.SINGLE_SUCCESS
     }

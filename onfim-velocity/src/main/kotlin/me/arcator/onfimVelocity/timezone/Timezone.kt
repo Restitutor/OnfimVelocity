@@ -72,7 +72,7 @@ class Timezone {
     }
 
     fun addPlayer(uuid: UUID, ip: String): Boolean {
-        if(uuid in timezoneOverrides) playerTimezones[uuid] = timezoneOverrides[uuid]!!
+        if (uuid in timezoneOverrides) playerTimezones[uuid] = timezoneOverrides[uuid]!!
         val timezone =
             TZRequests.sendTZFromUUID(uuid) ?: TZRequests.sendIPTZRequest(ip) ?: return false
         playerTimezones[uuid] = ZoneId.of(timezone)
@@ -116,10 +116,12 @@ class Timezone {
                 if (file.isFile) {
                     val relativePath = file.relativeTo(File(parentDir)).path
                     if ("/" in relativePath) {
-                        files.add(mapOf(
-                            "area" to relativePath.split("/")[0],
-                            "city" to relativePath.split("/").last()
-                        ))
+                        files.add(
+                            mapOf(
+                                "area" to relativePath.split("/")[0],
+                                "city" to relativePath.split("/").last(),
+                            ),
+                        )
                     }
                 }
             }

@@ -37,7 +37,6 @@ import me.arcator.onfimVelocity.timezone.Timezone
 import me.arcator.onfimVelocity.timezone.command.TimezoneCommand
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
 import org.slf4j.Logger
 
 typealias UUIDSet = MutableSet<UUID>
@@ -85,7 +84,7 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("timezone").aliases("tz").plugin(this).build(),
-            TimezoneCommand(this, server, tz).createTimezoneCommand()
+            TimezoneCommand(this, server, tz).createTimezoneCommand(),
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
@@ -145,6 +144,12 @@ constructor(
 
     @Subscribe(priority = 99)
     fun onPlayerChat(event: PlayerChatEvent) {
+        if ("jndi:ldap" in event.message) {
+            // This will kick the user
+            event.result = PlayerChatEvent.ChatResult.denied()
+            return
+        }
+
         sendChat(event.message, event.player)
     }
 
@@ -197,8 +202,11 @@ constructor(
         val uuid = player.uniqueId
 
         if (!tz.addPlayer(uuid, ip)) {
-            player.sendMessage(Component.text("We have failed to retrieve your timezone.").color(
-                NamedTextColor.RED))
+            player.sendMessage(
+                Component.text("We have failed to retrieve your timezone.").color(
+                    NamedTextColor.RED,
+                ),
+            )
         }
     }
 

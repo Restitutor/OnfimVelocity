@@ -24,11 +24,16 @@ class TimezoneArgumentType : ArgumentType<String> {
             .createWithContext(reader)
     }
 
-    override fun <S> listSuggestions(context: CommandContext<S>, builder: SuggestionsBuilder): CompletableFuture<Suggestions> {
+    override fun <S> listSuggestions(
+        context: CommandContext<S>,
+        builder: SuggestionsBuilder
+    ): CompletableFuture<Suggestions> {
         val input = builder.remaining.lowercase(Locale.getDefault())
         val alreadySuggested: MutableList<String> = mutableListOf()
         Timezone.TIMEZONES.stream()
-            .filter { e: Map<String, String> -> e.values.first().lowercase(Locale.getDefault()).startsWith(input) }
+            .filter { e: Map<String, String> ->
+                e.values.first().lowercase(Locale.getDefault()).startsWith(input)
+            }
             .map { e: Map<String, String> -> e.keys.first() + "/" + e.values.first() }
             .forEach { text: String ->
                 builder.suggest(text)
@@ -36,7 +41,9 @@ class TimezoneArgumentType : ArgumentType<String> {
             }
 
         Timezone.TIMEZONES.stream()
-            .filter{ e: Map<String, String> -> e.keys.first().lowercase(Locale.getDefault()).startsWith(input) }
+            .filter { e: Map<String, String> ->
+                e.keys.first().lowercase(Locale.getDefault()).startsWith(input)
+            }
             .map { e: Map<String, String> -> e.keys.first() + "/" + e.values.first() }
             .filter { text: String -> !alreadySuggested.contains(text) }
             .forEach { text: String -> builder.suggest(text) }
