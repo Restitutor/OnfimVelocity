@@ -1,6 +1,7 @@
 package me.arcator.onfimVelocity
 
 import com.google.inject.Inject
+import com.velocitypowered.api.event.ResultedEvent
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.command.CommandExecuteEvent
 import com.velocitypowered.api.event.connection.DisconnectEvent
@@ -8,11 +9,15 @@ import com.velocitypowered.api.event.connection.LoginEvent
 import com.velocitypowered.api.event.player.PlayerChatEvent
 import com.velocitypowered.api.event.player.ServerConnectedEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
+import com.velocitypowered.api.event.proxy.ProxyPingEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
+import com.velocitypowered.api.event.query.ProxyQueryEvent
+import com.velocitypowered.api.network.ProtocolVersion
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
+import com.velocitypowered.api.proxy.server.QueryResponse
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -166,6 +171,25 @@ constructor(
         }
         // Relay if publicly visible. Prepend / for special parsing.
         else if (command in RELAY_CMDS) sendChat("/${event.command}", player)
+    }
+
+    @Subscribe
+    fun onQuery(event: ProxyQueryEvent) {
+        // Only allow local queries
+        if (!event.querierAddress.isSiteLocalAddress)
+        // Make it empty
+            event.response = QueryResponse.builder().build()
+    }
+
+    @Subscribe
+    fun onPing(event: ProxyPingEvent) {
+        val address = event.connection.remoteAddress.address
+        // Always allow local queries or 1.13+ clients
+        if (address.isSiteLocalAddress || event.connection.protocolVersion > ProtocolVersion.MINECRAFT_1_13) return
+
+        // Otherwise assume it's a bot
+        this.logger.info("Blocked ping $address ${event.connection.protocolVersion}")
+        event.result = ResultedEvent.GenericResult.denied()
     }
 
     @Subscribe(priority = 99)
