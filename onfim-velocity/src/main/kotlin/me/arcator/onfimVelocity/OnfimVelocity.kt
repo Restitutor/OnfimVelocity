@@ -37,7 +37,6 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
-import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
 import me.arcator.onfimVelocity.timezone.command.TimezoneCommand
 import net.kyori.adventure.text.Component
@@ -104,7 +103,7 @@ constructor(
         )
 
         // Add TZ Overrides
-        server.scheduler.run { tz.setOverrides(TZRequests.sendTZOverridesRequest()) }
+        // server.scheduler.run { tz.setOverrides(TZRequests.sendTZOverridesRequest()) }
     }
 
     private fun sendEvt(evt: SerializedEvent) {

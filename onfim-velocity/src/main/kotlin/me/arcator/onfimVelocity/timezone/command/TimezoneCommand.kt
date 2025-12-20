@@ -1,7 +1,6 @@
 package me.arcator.onfimVelocity.timezone.command
 
 import com.mojang.brigadier.Command
-import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.velocitypowered.api.command.BrigadierCommand
 import com.velocitypowered.api.command.CommandSource
@@ -13,8 +12,6 @@ import java.util.concurrent.TimeUnit
 import me.arcator.onfimVelocity.OnfimVelocity
 import me.arcator.onfimVelocity.timezone.TZRequests
 import me.arcator.onfimVelocity.timezone.Timezone
-import me.arcator.onfimVelocity.timezone.Timezone.Companion.TIMEZONES
-import me.arcator.onfimVelocity.timezone.Timezone.Companion.TIMEZONES_STRING
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -33,51 +30,6 @@ class TimezoneCommand(
             .then(
                 BrigadierCommand.literalArgumentBuilder("link")
                     .executes { ctx: CommandContext<CommandSource> -> linkUserId(ctx.source) },
-            )
-            .then(
-                BrigadierCommand.literalArgumentBuilder("setTimezone")
-                    .then(
-                        BrigadierCommand.requiredArgumentBuilder(
-                            "timezone",
-                            StringArgumentType.greedyString(),
-                        )
-                            // Velocity inablilty fix
-                            .suggests { _, builder ->
-                                val input = builder.remaining.lowercase(Locale.getDefault())
-                                val alreadySuggested: MutableList<String> = mutableListOf()
-                                TIMEZONES.iterator()
-                                    .asSequence()
-                                    .filter {
-                                        it["city"]?.lowercase(Locale.getDefault())!!
-                                            .startsWith(input)
-                                    }
-                                    .map { "${it["area"]}/${it["city"]}" }
-                                    .onEach { text ->
-                                        builder.suggest(text)
-                                        alreadySuggested.add(text)
-                                    }
-                                TIMEZONES.iterator()
-                                    .asSequence()
-                                    .filter {
-                                        it["area"]?.lowercase(Locale.getDefault())!!
-                                            .startsWith(input)
-                                    }
-                                    .map { "${it["area"]}/${it["city"]}" }
-                                    .filterNot { alreadySuggested.contains(it) }
-                                    .forEach { builder.suggest(it) }
-                                builder.buildFuture()
-                            }
-                            .executes { ctx: CommandContext<CommandSource> ->
-                                setUserTimezone(
-                                    ctx.source,
-                                    ctx.getArgument("timezone", String::class.java),
-                                )
-                            },
-                    ),
-            )
-            .then(
-                BrigadierCommand.literalArgumentBuilder("clearTimezone")
-                    .executes { ctx: CommandContext<CommandSource> -> removeOverride(ctx.source) },
             )
             .then(
                 BrigadierCommand.literalArgumentBuilder("refreshTimezone")
@@ -152,48 +104,6 @@ class TimezoneCommand(
             val timezone: String = tz.getPlayerTimezone(source.uniqueId).id
             source.sendMessage(
                 Component.text("Your current timezone is: $timezone").color(NamedTextColor.GREEN),
-            )
-        } else {
-            source.sendMessage(
-                Component.text("Only executable by players!").color(NamedTextColor.RED),
-            )
-        }
-        return Command.SINGLE_SUCCESS
-    }
-
-    private fun setUserTimezone(source: CommandSource, timezone: String): Int {
-        if (timezone !in TIMEZONES_STRING) {
-            source.sendMessage(Component.text("Wrong timezone!").color(NamedTextColor.RED))
-            return Command.SINGLE_SUCCESS
-        }
-        if (source is Player) {
-            val uuid: UUID = source.uniqueId
-            TZRequests.sendTZOverridePost(uuid, timezone)
-            tz.addTimezone(source.uniqueId, timezone)
-            source.sendMessage(
-                Component.text("Your timezone has been changed!").color(NamedTextColor.GREEN),
-            )
-        } else {
-            source.sendMessage(
-                Component.text("Only executable by players!").color(NamedTextColor.RED),
-            )
-        }
-        return Command.SINGLE_SUCCESS
-    }
-
-    private fun removeOverride(source: CommandSource): Int {
-        if (source is Player) {
-            val uuid: UUID = source.uniqueId
-            if (!TZRequests.sendTZOverrideRemove(uuid)) {
-                source.sendMessage(
-                    Component.text("There's nothing to remove!").color(NamedTextColor.RED),
-                )
-                return Command.SINGLE_SUCCESS
-            }
-            tz.removeOverride(uuid)
-            tz.addPlayer(uuid, source.remoteAddress.address.hostAddress)
-            source.sendMessage(
-                Component.text("Timezone override was cleared!").color(NamedTextColor.GREEN),
             )
         } else {
             source.sendMessage(

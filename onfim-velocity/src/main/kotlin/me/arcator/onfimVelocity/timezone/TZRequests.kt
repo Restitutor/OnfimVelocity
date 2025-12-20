@@ -1,7 +1,5 @@
 package me.arcator.onfimVelocity.timezone
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -15,12 +13,6 @@ import kotlinx.serialization.json.jsonObject
 object TZRequests {
     private const val IP_REQUEST_TEMPLATE =
         """{"requestType": "TIMEZONE_FROM_IP", "apiKey": "%s", "data": {"ip": "%s"}}"""
-    private const val TZ_OVERRIDES_POST_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDES_POST", "apiKey": "%s", "data": {"%s": "%s"}}"""
-    private const val TZ_OVERRIDES_GET_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDES_GET", "apiKey": "%s"}"""
-    private const val TZ_OVERRIDE_REMOVE_TEMPLATE =
-        """{"requestType": "TIMEZONE_OVERRIDE_REMOVE", "apiKey": "%s", "data": {"uuid": "%s"}}"""
     private const val USER_ID_UUID_LINK_POST_TEMPLATE =
         """{"requestType": "USER_ID_UUID_LINK_POST", "apiKey": "%s", "data": {"uuid": "%s", "timezone": "%s"}}"""
     private const val UUID_TIMEZONE_REQUEST =
@@ -42,19 +34,6 @@ object TZRequests {
         return responseMap["message"]!!.replace("\"", "")
     }
 
-    fun sendTZOverridePost(uuid: UUID, timezone: String): Boolean {
-        val requestData =
-            TZ_OVERRIDES_POST_TEMPLATE.format(Timezone.API_KEY, uuid.toString(), timezone)
-        val responseMap = sendTZBotRequest(requestData) ?: return false
-        return responseMap["code"]!!.toInt() == 200
-    }
-
-    fun sendTZOverrideRemove(uuid: UUID): Boolean {
-        val requestData = TZ_OVERRIDE_REMOVE_TEMPLATE.format(Timezone.API_KEY, uuid.toString())
-        val responseMap = sendTZBotRequest(requestData) ?: return false
-        return responseMap["code"]!!.toInt() == 200
-    }
-
     fun sendUserIdUUIDLinkPost(uuid: UUID, timezone: ZoneId): String? {
         val requestData = USER_ID_UUID_LINK_POST_TEMPLATE.format(
             Timezone.API_KEY,
@@ -65,27 +44,6 @@ object TZRequests {
         if (responseMap["code"]!!.toInt() == 200) return responseMap["message"].toString()
             .replace("\"", "")
         return null
-    }
-
-    fun sendTZOverridesRequest(): Map<UUID, String> {
-        val responseMap =
-            sendTZBotRequest(TZ_OVERRIDES_GET_TEMPLATE.format(Timezone.API_KEY)) ?: return mapOf()
-        if (responseMap["code"]!!.toInt() == 200) {
-            val gson = Gson()
-            val tempMap: Map<String, String> = gson.fromJson(
-                responseMap["message"],
-                object : TypeToken<Map<String, String>>() {}.type,
-            )
-
-            return tempMap.mapNotNull { (key, value) ->
-                try {
-                    UUID.fromString(key) to value
-                } catch (e: IllegalArgumentException) {
-                    null
-                }
-            }.toMap()
-        }
-        return mapOf()
     }
 
     private fun sendTZBotRequest(data: String): Map<String, String>? {
