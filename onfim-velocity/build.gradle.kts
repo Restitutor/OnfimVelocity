@@ -18,6 +18,8 @@ kotlin {
 dependencies {
     compileOnly(libs.velocity.api)
     kapt(libs.velocity.api)
+
+    implementation(libs.tzbot4j)
     implementation(libs.kotlin.stdlib)
     implementation(project(":onfim-lib"))
     implementation(libs.bundles.jackson)

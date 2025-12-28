@@ -1,6 +1,7 @@
 package me.arcator.onfimVelocity
 
 import com.google.inject.Inject
+import com.m3z0id.tzbot4j.TZBot4J
 import com.velocitypowered.api.event.ResultedEvent
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.command.CommandExecuteEvent
@@ -21,6 +22,7 @@ import com.velocitypowered.api.proxy.server.QueryResponse
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.function.Predicate
 import me.arcator.onfimLib.SCTPIn
 import me.arcator.onfimLib.UDPIn
 import me.arcator.onfimLib.format.Chat
@@ -37,10 +39,8 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
-import me.arcator.onfimVelocity.timezone.Timezone
-import me.arcator.onfimVelocity.timezone.command.TimezoneCommand
+import me.arcator.onfimVelocity.timezone.TimezoneCommand
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import org.slf4j.Logger
 
 typealias UUIDSet = MutableSet<UUID>
@@ -53,10 +53,11 @@ constructor(
     private val logger: Logger,
     @DataDirectory private val dataDirectory: Path,
 ) {
-    private val tz = Timezone()
+    private val tzBot = TZBot4J.init(logger, dataDirectory)
+    private val isOnlinePredicate = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
-    private val cs = ChatSender(server, noImage.players, noRelay.players, tz)
+    private val cs = ChatSender(server, noImage.players, noRelay.players, tzBot)
 
     private val unpacker = Unpacker(cs, logger::info)
     private val uListener = UDPIn(unpacker::read)
@@ -88,7 +89,7 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("timezone").aliases("tz").plugin(this).build(),
-            TimezoneCommand(this, server, tz).createTimezoneCommand(),
+            TimezoneCommand(this, server, tzBot).createTimezoneCommand(),
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
@@ -101,9 +102,6 @@ constructor(
                 )
             },
         )
-
-        // Add TZ Overrides
-        // server.scheduler.run { tz.setOverrides(TZRequests.sendTZOverridesRequest()) }
     }
 
     private fun sendEvt(evt: SerializedEvent) {
@@ -128,6 +126,7 @@ constructor(
         uListener.disable()
         noRelay.save()
         noImage.save()
+        tzBot.close()
     }
 
     private fun sendChat(rawMsg: String, player: Player) {
@@ -228,13 +227,7 @@ constructor(
         val ip = player.remoteAddress?.address?.hostAddress ?: return
         val uuid = player.uniqueId
 
-        if (!tz.addPlayer(uuid, ip)) {
-            player.sendMessage(
-                Component.text("We have failed to retrieve your timezone.").color(
-                    NamedTextColor.RED,
-                ),
-            )
-        }
+        tzBot.addPlayer(uuid, ip, isOnlinePredicate)
     }
 
     @Subscribe(priority = 99)
@@ -248,7 +241,7 @@ constructor(
         if (server == null) return
 
         // Remove timezone
-        tz.removeUUID(event.player.uniqueId)
+        tzBot.removePlayer(event.player.uniqueId)
 
         val name = event.player.username
         sendEvt(makeJoinQuit(username = name, serverName = server, type = "Quit"))

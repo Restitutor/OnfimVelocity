@@ -1,20 +1,18 @@
 package me.arcator.onfimVelocity
 
+import com.m3z0id.tzbot4j.TZBot4J
 import com.velocitypowered.api.proxy.ProxyServer
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ImageEvt
 import me.arcator.onfimLib.format.PlayerMoveInterface
 import me.arcator.onfimLib.format.ServerMessage
 import me.arcator.onfimLib.interfaces.ChatSenderInterface
-import me.arcator.onfimVelocity.timezone.Timezone
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextReplacementConfig
 
 class ChatSender(
     private val server: ProxyServer,
     private val noImagePlayers: UUIDSet,
     private val noRelayPlayers: UUIDSet,
-    private val tz: Timezone
+    private val tzBot: TZBot4J
 ) : ChatSenderInterface {
     var skipRelay = false
 
@@ -40,43 +38,10 @@ class ChatSender(
                     ?.name != evt.server.name
             }
 
-        val regex = "<t:(\\d{1,13})(?::([fFdDtTrR]))?>".toRegex()
-        val matches = regex.findAll(evt.plaintext).toList()
-
-        if (matches.isNotEmpty()) {
-            val substrTimestampMode = matches.map { match ->
-                val substr = match.value
-                var timestamp: Long? = match.groups[1]!!.value.toLong()
-                val mode = match.groups[2]?.value?.get(0) ?: 'f'
-
-                // If timestamp is bigger than discord max timestamp
-                if (timestamp!! > 8640000000000L) timestamp = null
-
-                Triple(substr, timestamp, mode)
-            }
-
-            filteredPlayers.forEach { player ->
-                var chatMessage = evt.getChatMessage()
-
-                substrTimestampMode.forEach start@{ triple ->
-                    val replacement =
-                        tz.getTime(player.uniqueId, triple.second ?: return@start, triple.third)
-
-                    val config = TextReplacementConfig.builder()
-                        .match(triple.first)
-                        .replacement(Component.text(replacement))
-                        .build()
-
-                    chatMessage = chatMessage.replaceText(config)
-                }
-
-                player.sendMessage(chatMessage)
-            }
-        } else {
-            filteredPlayers.forEach { player ->
-                player.sendMessage(text)
-            }
+        filteredPlayers.forEach { player ->
+            player.sendMessage(tzBot.tzManager.adjustForPlayer(text, player.uniqueId) ?: text)
         }
+
     }
 
     override fun say(evt: ImageEvt) {
