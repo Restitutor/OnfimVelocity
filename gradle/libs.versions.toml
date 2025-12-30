@@ -1,12 +1,12 @@
 [versions]
-kotlin = "2.2.0-RC3"
+kotlin = "2.3.0"
 velocity = "3.4.0-SNAPSHOT"
-jackson = "2.19.0"
-jemoji = "1.7.4"
-minedown = "1.7.4-SNAPSHOT"
-msgpack = "0.9.9"
-kotlinx-serialization = "1.8.1"
-shadow = "9.0.0-beta17"
+jackson = "2.20.1"
+jemoji = "1.7.5"
+minedown = "1.7.6-SNAPSHOT"
+msgpack = "0.9.10"
+kotlinx-serialization = "1.10.0-RC"
+shadow = "9.3.0"
 tzbot4j = "1.0.5"
 
 [libraries]
@@ -18,7 +18,7 @@ jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", ve
 jemoji = { group = "net.fellbaum", name = "jemoji", version.ref = "jemoji" }
 minedown = { group = "de.themoep", name = "minedown-adventure", version.ref = "minedown" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json-jvm", version.ref = "kotlinx-serialization" }
-tzbot4j = { group = "com.m3z0id.tzbot4j", name = "TZBot4J", version.ref = "tzbot4j"}
+tzbot4j = { group = "com.m3z0id.tzbot4j", name = "TZBot4J", version.ref = "tzbot4j" }
 
 [bundles]
 jackson = ["jackson-msgpack", "jackson-kotlin", "jackson-core"]
