@@ -10,17 +10,17 @@ import com.velocitypowered.api.command.BrigadierCommand
 import com.velocitypowered.api.command.CommandSource
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
+import java.net.URI
+import java.time.ZoneId
+import java.util.*
+import java.util.concurrent.TimeUnit
+import java.util.function.Predicate
 import me.arcator.onfimVelocity.OnfimVelocity
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import java.net.URI
-import java.time.ZoneId
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import java.util.function.Predicate
 
 class TimezoneCommand(
     private val plugin: OnfimVelocity,
@@ -49,7 +49,7 @@ class TimezoneCommand(
         val responsePromise = tzBot.queueRequest(TZRequest(IsLinkedData(uuid)))
         val response = responsePromise.get()
 
-        return if(response.isSuccessful) response.asString else null
+        return if (response.isSuccessful) response.asString else null
     }
 
     private fun checkIfLinkedLoop(runTimes: Int, uuid: UUID): String? {
@@ -65,25 +65,36 @@ class TimezoneCommand(
     }
 
     private fun linkUserId(source: CommandSource): Int {
-        if(source !is Player) {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+        if (source !is Player) {
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
             return Command.SINGLE_SUCCESS
         }
 
-        if(!tzBot.isTZBotUp) {
-            source.sendMessage(Component.text("Timezone service is down. Please, try again later").color(NamedTextColor.RED))
+        if (!tzBot.isTZBotUp) {
+            source.sendMessage(
+                Component.text("Timezone service is down. Please, try again later")
+                    .color(NamedTextColor.RED),
+            )
             return Command.SINGLE_SUCCESS
         }
 
         val zone: ZoneId? = tzBot.tzManager.getTimezone(source.uniqueId)
-        if(zone == null) {
-            source.sendMessage(Component.text("Error: Your timezone is not assigned!", NamedTextColor.RED))
+        if (zone == null) {
+            source.sendMessage(
+                Component.text(
+                    "Error: Your timezone is not assigned!",
+                    NamedTextColor.RED,
+                ),
+            )
             return Command.SINGLE_SUCCESS
         }
 
-        val codeResponsePromise = tzBot.queueRequest(TZRequest(TimezonePostData(source.uniqueId, zone.id)))
+        val codeResponsePromise =
+            tzBot.queueRequest(TZRequest(TimezonePostData(source.uniqueId, zone.id)))
         val response = codeResponsePromise.get()
-        if(!response.isSuccessful || response.asString == null) {
+        if (!response.isSuccessful || response.asString == null) {
             source.sendMessage(
                 Component.text("Failed to create a code for you. Maybe you are already linked?")
                     .color(NamedTextColor.RED),
@@ -118,7 +129,10 @@ class TimezoneCommand(
 
         val accoutLinked = checkIfLinkedLoop(runTimes, source.uniqueId)
         if (accoutLinked != null) {
-            source.sendMessage(Component.text("Linked successfully with $accoutLinked on Discord!").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Linked successfully with $accoutLinked on Discord!")
+                    .color(NamedTextColor.GREEN),
+            )
         } else {
             source.sendMessage(Component.text("Your code has timed out!").color(NamedTextColor.RED))
         }
@@ -127,17 +141,24 @@ class TimezoneCommand(
 
     private fun getTimezone(source: CommandSource): Int {
         if (source !is Player) {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
             return Command.SINGLE_SUCCESS
         }
 
         val timezone = tzBot.tzManager.getTimezone(source.uniqueId)
-        if(timezone == null) {
+        if (timezone == null) {
             source.sendMessage(
                 Component.text("Your timezone has not been assigned! It should assign soon.").color(
-                    NamedTextColor.RED))
+                    NamedTextColor.RED,
+                ),
+            )
         } else {
-            source.sendMessage(Component.text("Your current timezone is: ${timezone.id}").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Your current timezone is: ${timezone.id}")
+                    .color(NamedTextColor.GREEN),
+            )
         }
 
         return Command.SINGLE_SUCCESS
@@ -148,16 +169,23 @@ class TimezoneCommand(
             val uuid: UUID = source.uniqueId
             val ip = source.remoteAddress?.address?.hostAddress ?: return Command.SINGLE_SUCCESS
 
-            if(!tzBot.isTZBotUp) {
-                source.sendMessage(Component.text("Timezone service is down. Please, try again later").color(NamedTextColor.RED))
+            if (!tzBot.isTZBotUp) {
+                source.sendMessage(
+                    Component.text("Timezone service is down. Please, try again later")
+                        .color(NamedTextColor.RED),
+                )
                 return Command.SINGLE_SUCCESS
             }
 
             tzBot.removePlayer(uuid)
             tzBot.addPlayer(uuid, ip, isOnlinePredicate)
-            source.sendMessage(Component.text("Timezone refreshed successfully!").color(NamedTextColor.GREEN))
+            source.sendMessage(
+                Component.text("Timezone refreshed successfully!").color(NamedTextColor.GREEN),
+            )
         } else {
-            source.sendMessage(Component.text("Only executable by players!").color(NamedTextColor.RED))
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
         }
         return Command.SINGLE_SUCCESS
     }

@@ -2,6 +2,7 @@ package me.arcator.onfimVelocity
 
 import com.google.inject.Inject
 import com.m3z0id.tzbot4j.TZBot4J
+import com.m3z0id.tzbot4j.config.subclasses.TZFlag
 import com.velocitypowered.api.event.ResultedEvent
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.command.CommandExecuteEvent
@@ -53,7 +54,7 @@ constructor(
     private val logger: Logger,
     @DataDirectory private val dataDirectory: Path,
 ) {
-    private val tzBot = TZBot4J.init(logger, dataDirectory)
+    private val tzBot = TZBot4J.init(logger, dataDirectory, TZFlag.AES, TZFlag.MSGPACK)
     private val isOnlinePredicate = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
@@ -112,7 +113,9 @@ constructor(
                 // Relay to self
                 if (evt is ServerMessage) {
                     cs.say(evt)
-                } else if (evt is PlayerMoveInterface && evt.type !in hashSetOf("SJoin", "SQuit")) {
+                } else if (evt is PlayerMoveInterface &&
+                    evt.type !in hashSetOf("SJoin", "SQuit")
+                ) {
                     cs.say(evt)
                 }
             }
@@ -138,7 +141,8 @@ constructor(
                 user = ChatUser(cleanName(player.username), uuid = player.uniqueId),
                 server =
                     EventLocation(
-                        name = player.currentServer.orElse(null).serverInfo?.name ?: "Unknown",
+                        name = player.currentServer.orElse(null).serverInfo?.name
+                            ?: "Unknown",
                     ),
             ),
         )
@@ -183,7 +187,10 @@ constructor(
     fun onPing(event: ProxyPingEvent) {
         val address = event.connection.remoteAddress.address
         // Always allow local queries or 1.13+ clients
-        if (address.isSiteLocalAddress || event.connection.protocolVersion > ProtocolVersion.MINECRAFT_1_13) return
+        if (address.isSiteLocalAddress ||
+            event.connection.protocolVersion > ProtocolVersion.MINECRAFT_1_13
+        )
+            return
 
         // Otherwise assume it's a bot
         this.logger.info("Blocked ping $address ${event.connection.protocolVersion}")

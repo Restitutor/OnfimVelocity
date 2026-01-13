@@ -6,37 +6,49 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class ImageEvt(private val content: ByteArray, val name: String, val width: Int, val height: Int) :
-    SerializedEvent(type = "Image") {
-
+class ImageEvt(
+    private val content: ByteArray,
+    val name: String,
+    val width: Int,
+    val height: Int,
+) : SerializedEvent(type = "Image") {
     @Suppress("unused")
-    fun getLines() = iterator {
-        GZIPInputStream(content.inputStream()).use { gzipStream ->
-            var pixelIndex = 0
-            var comp = Component.text()
+    fun getLines() =
+        iterator {
+            GZIPInputStream(content.inputStream()).use { gzipStream ->
+                var currentLineWidth = 0
+                var comp = Component.text()
 
-            while (true) {
-                val pixel = gzipStream.readNBytes(3)
-                if (pixel.size < 3) break // EOF or incomplete pixel
+                // Reusable buffer to avoid allocation
+                val packet = ByteArray(4)
 
-                val r = pixel[0].toInt() and 0xFF
-                val g = pixel[1].toInt() and 0xFF
-                val b = pixel[2].toInt() and 0xFF
-                val hexColor = String.format("#%02X%02X%02X", r, g, b)
+                while (true) {
+                    // Read exactly 4 bytes (R, G, B, Count)
+                    if (gzipStream.readNBytes(packet, 0, 4) < 4) break
 
-                comp.append(Component.text("▏", TextColor.fromCSSHexString(hexColor)))
+                    val r = packet[0].toInt() and 0xFF
+                    val g = packet[1].toInt() and 0xFF
+                    val b = packet[2].toInt() and 0xFF
+                    val count = packet[3].toInt() and 0xFF
 
-                pixelIndex++
-                if (pixelIndex % width == 0) {
+                    // Optimization: Use direct Int color instead of Hex String parsing
+                    comp.append(Component.text("▏".repeat(count), TextColor.color(r, g, b)))
+
+                    currentLineWidth += count
+
+                    // Since Python guarantees runs don't overlap lines,
+                    // we only check if we hit the exact edge.
+                    if (currentLineWidth == width) {
+                        yield(comp.build())
+                        comp = Component.text()
+                        currentLineWidth = 0
+                    }
+                }
+
+                // Safety flush for non-standard sizes
+                if (currentLineWidth > 0) {
                     yield(comp.build())
-                    comp = Component.text()
                 }
             }
-
-            // Yield any remaining pixels on the last line
-            if (pixelIndex % width != 0) {
-                yield(comp.build())
-            }
         }
-    }
 }
