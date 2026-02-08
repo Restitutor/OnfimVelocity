@@ -2,6 +2,7 @@ package me.arcator.onfimVelocity
 
 import com.google.inject.Inject
 import com.m3z0id.tzbot4j.TZBot4J
+import com.m3z0id.tzbot4j.config.Config
 import com.m3z0id.tzbot4j.config.subclasses.TZFlag
 import com.velocitypowered.api.event.ResultedEvent
 import com.velocitypowered.api.event.Subscribe
@@ -54,7 +55,7 @@ constructor(
     private val logger: Logger,
     @DataDirectory private val dataDirectory: Path,
 ) {
-    private val tzBot = TZBot4J.init(logger, dataDirectory, TZFlag.AES, TZFlag.MSGPACK)
+    private val tzBot = TZBot4J.init(logger, Config.get(dataDirectory.toFile()), TZFlag.AES, TZFlag.MSGPACK)
     private val isOnlinePredicate = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
