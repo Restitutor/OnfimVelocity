@@ -41,6 +41,7 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
+import me.arcator.onfimVelocity.chatXP.ChatXPHandler
 import me.arcator.onfimVelocity.timezone.TimezoneCommand
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
@@ -57,6 +58,7 @@ constructor(
 ) {
     private val tzBot = TZBot4J.init(logger, Config.get(dataDirectory.toFile()), TZFlag.AES, TZFlag.MSGPACK)
     private val isOnlinePredicate = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
+    private val chatXPHandler = ChatXPHandler(tzBot)
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
     private val cs = ChatSender(server, noImage.players, noRelay.players, tzBot)
@@ -159,6 +161,9 @@ constructor(
         }
 
         sendChat(event.message, event.player)
+        if (event.message.lowercase().toSet().intersect(('a'..'z').toSet()).size > 3) {
+            chatXPHandler.addXP(event.player.uniqueId)
+        }
     }
 
     @Subscribe(priority = -99)

@@ -7,7 +7,7 @@ minedown = "1.7.6-SNAPSHOT"
 msgpack = "0.9.10"
 kotlinx-serialization = "1.10.0-RC"
 shadow = "9.3.0"
-tzbot4j = "1.0.11"
+tzbot4j = "1.0.12"
 
 [libraries]
 velocity-api = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }
