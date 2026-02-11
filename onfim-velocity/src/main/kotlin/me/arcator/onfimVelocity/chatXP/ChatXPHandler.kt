@@ -20,6 +20,7 @@ class ChatXPHandler(tzbot: TZBot4J) {
     private val sock: UDPSocket
     private val tzbot: TZBot4J
     private val discordIdUUIDMap: MutableMap<UUID, Long>
+    private val notLinked: MutableSet<UUID> = mutableSetOf()
     private val invalidateScheduler: ScheduledExecutorService
     private var initialized = false
 
@@ -47,12 +48,20 @@ class ChatXPHandler(tzbot: TZBot4J) {
         sock.close()
     }
 
+    fun addUUID(uuid: UUID, discordId: Long) {
+        discordIdUUIDMap[uuid] = discordId
+    }
+
     fun addXP(uuid: UUID) {
-        if (!initialized) return
+        if (!initialized || uuid in notLinked) return
         if (!discordIdUUIDMap.containsKey(uuid)) {
             val resp = tzbot.queueRequest(TZRequest(UserIDFromUUIDData(uuid)))
             resp.whenComplete(BiConsumer { response: TZResponse?, err: Throwable? ->
-                if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) return@BiConsumer
+                if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) {
+                    notLinked.add(uuid)
+                    return@BiConsumer
+                }
+
                 discordIdUUIDMap[uuid] = response!!.asLong
 
                 val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
@@ -72,7 +81,7 @@ class ChatXPHandler(tzbot: TZBot4J) {
     }
 
     fun startInvalidating() {
-        invalidateScheduler.scheduleAtFixedRate({ discordIdUUIDMap.clear() }, 10L, 10L, TimeUnit.MINUTES)
+        invalidateScheduler.scheduleAtFixedRate({ discordIdUUIDMap.clear(); notLinked.clear() }, 10L, 10L, TimeUnit.MINUTES)
     }
 
     fun isInvalidatorRunning(): Boolean {

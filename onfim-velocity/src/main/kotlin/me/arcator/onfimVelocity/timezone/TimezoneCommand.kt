@@ -15,7 +15,7 @@ import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
-import me.arcator.onfimVelocity.OnfimVelocity
+import me.arcator.onfimVelocity.chatXP.ChatXPHandler
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -23,9 +23,9 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 
 class TimezoneCommand(
-    private val plugin: OnfimVelocity,
     private val server: ProxyServer,
     private val tzBot: TZBot4J,
+    private val chatXPHandler: ChatXPHandler,
     private val isOnlinePredicate: Predicate<UUID> = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
 ) {
     fun createTimezoneCommand(): BrigadierCommand {
@@ -138,6 +138,7 @@ class TimezoneCommand(
                 Component.text("Linked successfully with $accoutLinked on Discord!")
                     .color(NamedTextColor.GREEN),
             )
+            chatXPHandler.addUUID(source.uniqueId, accoutLinked.toLong())
         } else {
             source.sendMessage(Component.text("Your code has timed out!").color(NamedTextColor.RED))
         }

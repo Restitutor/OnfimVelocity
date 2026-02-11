@@ -93,7 +93,7 @@ constructor(
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("timezone").aliases("tz").plugin(this).build(),
-            TimezoneCommand(this, server, tzBot).createTimezoneCommand(),
+            TimezoneCommand(server, tzBot, chatXPHandler).createTimezoneCommand(),
         )
         server.commandManager.register(
             server.commandManager.metaBuilder("globalrelay").plugin(this).build(),
