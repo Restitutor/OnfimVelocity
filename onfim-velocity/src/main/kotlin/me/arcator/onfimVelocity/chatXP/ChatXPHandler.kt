@@ -9,6 +9,9 @@ import java.net.SocketException
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import kotlin.RuntimeException
 import kotlin.Throwable
@@ -16,14 +19,19 @@ import kotlin.Throwable
 class ChatXPHandler(tzbot: TZBot4J) {
     private val sock: UDPSocket
     private val tzbot: TZBot4J
-    private val discordIdUUIDMap: MutableMap<UUID?, Long?>
+    private val discordIdUUIDMap: MutableMap<UUID, Long>
+    private val invalidateScheduler: ScheduledExecutorService
     private var initialized = false
 
     init {
         try {
-            this.sock = UDPSocket("jylina", 8890)
-            this.discordIdUUIDMap = HashMap<UUID?, Long?>()
+            sock = UDPSocket("jylina", 8890)
+            discordIdUUIDMap = mutableMapOf()
             this.tzbot = tzbot
+
+            invalidateScheduler = Executors.newScheduledThreadPool(1)
+            startInvalidating()
+
             initialized = true
         } catch (e: SocketException) {
             initialized = false
@@ -34,12 +42,17 @@ class ChatXPHandler(tzbot: TZBot4J) {
         }
     }
 
+    fun close() {
+        invalidateScheduler.close()
+        sock.close()
+    }
+
     fun addXP(uuid: UUID) {
         if (!initialized) return
         if (!discordIdUUIDMap.containsKey(uuid)) {
             val resp = tzbot.queueRequest(TZRequest(UserIDFromUUIDData(uuid)))
             resp.whenComplete(BiConsumer { response: TZResponse?, err: Throwable? ->
-                if (err != null && !response!!.isSuccessful) return@BiConsumer
+                if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) return@BiConsumer
                 discordIdUUIDMap[uuid] = response!!.asLong
 
                 val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
@@ -52,5 +65,21 @@ class ChatXPHandler(tzbot: TZBot4J) {
         buffer.putLong(discordIdUUIDMap[uuid]!!)
 
         sock.makeRequest(buffer.array())
+    }
+
+    fun deleteEntry(uuid: UUID?) {
+        discordIdUUIDMap.remove(uuid ?: return)
+    }
+
+    fun startInvalidating() {
+        invalidateScheduler.scheduleAtFixedRate({ discordIdUUIDMap.clear() }, 10L, 10L, TimeUnit.MINUTES)
+    }
+
+    fun isInvalidatorRunning(): Boolean {
+        return !invalidateScheduler.isTerminated
+    }
+
+    fun stopInvalidating() {
+        invalidateScheduler.close()
     }
 }

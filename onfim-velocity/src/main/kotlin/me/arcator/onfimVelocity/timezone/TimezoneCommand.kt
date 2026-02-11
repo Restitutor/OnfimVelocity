@@ -37,6 +37,11 @@ class TimezoneCommand(
                     .executes { ctx: CommandContext<CommandSource> -> linkUserId(ctx.source) },
             )
             .then(
+                BrigadierCommand.literalArgumentBuilder("unlink")
+                    .executes { ctx: CommandContext<CommandSource> -> unlink(ctx.source) },
+
+            )
+            .then(
                 BrigadierCommand.literalArgumentBuilder("refreshTimezone")
                     .executes { ctx: CommandContext<CommandSource> -> refreshTimezone(ctx.source) },
             )
@@ -136,6 +141,35 @@ class TimezoneCommand(
         } else {
             source.sendMessage(Component.text("Your code has timed out!").color(NamedTextColor.RED))
         }
+        return Command.SINGLE_SUCCESS
+    }
+
+    private fun unlink(source: CommandSource): Int {
+        if (source !is Player) {
+            source.sendMessage(
+                Component.text("Only executable by players!").color(NamedTextColor.RED),
+            )
+            return Command.SINGLE_SUCCESS
+        }
+
+        if(checkIfLinked(source.uniqueId) == null) {
+            source.sendMessage(
+                Component.text("You aren't linked to any account on Discord!").color(NamedTextColor.RED),
+            )
+            return Command.SINGLE_SUCCESS
+        }
+
+        val discordComponent = Component.text("Discord")
+            .decorate(TextDecoration.UNDERLINED)
+            .color(NamedTextColor.BLUE)
+            .hoverEvent(HoverEvent.showText(Component.text("Click to join!")))
+            .clickEvent(ClickEvent.openUrl(URI.create("https://discord.gg/GwArgw2").toURL()))
+
+        val msg = Component.text("Please, confirm the unlinking on our ")
+            .append(discordComponent)
+            .append(Component.text(" and run /unlink from TimezoneBot#8433"))
+
+        source.sendMessage(msg)
         return Command.SINGLE_SUCCESS
     }
 

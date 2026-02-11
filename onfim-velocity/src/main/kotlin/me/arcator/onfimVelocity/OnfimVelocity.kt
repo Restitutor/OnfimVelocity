@@ -132,6 +132,7 @@ constructor(
         uListener.disable()
         noRelay.save()
         noImage.save()
+        chatXPHandler.close()
         tzBot.close()
     }
 
@@ -161,9 +162,13 @@ constructor(
         }
 
         sendChat(event.message, event.player)
-        if (event.message.lowercase().toSet().intersect(('a'..'z').toSet()).size > 3) {
-            chatXPHandler.addXP(event.player.uniqueId)
-        }
+        server.scheduler
+            .buildTask(this) { ->
+                if (event.message.lowercase().toSet().intersect(('a'..'z').toSet()).size > 3) {
+                    chatXPHandler.addXP(event.player.uniqueId)
+                }
+            }
+            .schedule()
     }
 
     @Subscribe(priority = -99)
@@ -231,6 +236,8 @@ constructor(
                 .buildTask(this) { -> player.sendMessage(Component.text(greet)) }
                 .delay(5L, TimeUnit.SECONDS)
                 .schedule()
+
+            if (!chatXPHandler.isInvalidatorRunning()) chatXPHandler.startInvalidating()
         }
     }
 
@@ -247,16 +254,20 @@ constructor(
     fun onDisconnect(event: DisconnectEvent) {
         val fallbackName = lastServer.remove(event.player.uniqueId)
 
-        val server =
+        val serverName =
             event.player.currentServer.orElse(null)?.server?.serverInfo?.name ?: fallbackName
 
         // Unsuccessful login. Don't print.
-        if (server == null) return
+        if (serverName == null) return
 
         // Remove timezone
         tzBot.removePlayer(event.player.uniqueId)
+        // Remove cached UUID
+        chatXPHandler.deleteEntry(event.player.uniqueId)
 
         val name = event.player.username
-        sendEvt(makeJoinQuit(username = name, serverName = server, type = "Quit"))
+        sendEvt(makeJoinQuit(username = name, serverName = serverName, type = "Quit"))
+
+        if(server.playerCount == 0 && chatXPHandler.isInvalidatorRunning()) chatXPHandler.stopInvalidating()
     }
 }
