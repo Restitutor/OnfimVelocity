@@ -1,4 +1,4 @@
-package me.arcator.onfimVelocity.chatXP
+package me.arcator.onfimVelocity
 
 import com.m3z0id.tzbot4j.TZBot4J
 import com.m3z0id.tzbot4j.network.UDPSocket
@@ -8,13 +8,11 @@ import com.m3z0id.tzbot4j.tzLib.net.c2s.UserIDFromUUIDData
 import java.net.SocketException
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
-import kotlin.RuntimeException
-import kotlin.Throwable
 
 class ChatXPHandler(tzbot: TZBot4J) {
     private val sock: UDPSocket
@@ -31,7 +29,6 @@ class ChatXPHandler(tzbot: TZBot4J) {
             this.tzbot = tzbot
 
             invalidateScheduler = Executors.newScheduledThreadPool(1)
-            startInvalidating()
 
             initialized = true
         } catch (e: SocketException) {
@@ -52,32 +49,36 @@ class ChatXPHandler(tzbot: TZBot4J) {
         discordIdUUIDMap[uuid] = discordId
     }
 
+    private fun makeAddXPRequest(discordId: Long) {
+        val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
+        buffer.putLong(discordId)
+        sock.makeRequest(buffer.array())
+    }
+
+    private fun fetchDiscordId(uuid: UUID) {
+        val resp = tzbot.queueRequest(TZRequest(UserIDFromUUIDData(uuid)))
+        resp.whenComplete(BiConsumer { response: TZResponse?, err: Throwable? ->
+            if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) {
+                notLinked.add(uuid)
+                return@BiConsumer
+            }
+
+            discordIdUUIDMap[uuid] = response!!.asLong
+        })
+    }
+
     fun addXP(uuid: UUID) {
         if (!initialized || uuid in notLinked) return
-        if (!discordIdUUIDMap.containsKey(uuid)) {
-            val resp = tzbot.queueRequest(TZRequest(UserIDFromUUIDData(uuid)))
-            resp.whenComplete(BiConsumer { response: TZResponse?, err: Throwable? ->
-                if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) {
-                    notLinked.add(uuid)
-                    return@BiConsumer
-                }
-
-                discordIdUUIDMap[uuid] = response!!.asLong
-
-                val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
-                buffer.putLong(response.asLong)
-                sock.makeRequest(buffer.array())
-            })
-            return
-        }
-        val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
-        buffer.putLong(discordIdUUIDMap[uuid]!!)
-
-        sock.makeRequest(buffer.array())
+        if (!discordIdUUIDMap.containsKey(uuid)) fetchDiscordId(uuid)
+        makeAddXPRequest(discordIdUUIDMap[uuid] ?: return)
     }
 
     fun deleteEntry(uuid: UUID?) {
         discordIdUUIDMap.remove(uuid ?: return)
+    }
+
+    fun deleteFromNotLinked(uuid: UUID) {
+        notLinked.remove(uuid)
     }
 
     fun startInvalidating() {

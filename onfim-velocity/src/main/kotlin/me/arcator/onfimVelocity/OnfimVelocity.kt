@@ -41,8 +41,8 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
-import me.arcator.onfimVelocity.chatXP.ChatXPHandler
-import me.arcator.onfimVelocity.timezone.TimezoneCommand
+import me.arcator.onfimVelocity.ChatXPHandler
+import me.arcator.onfimVelocity.TimezoneCommand
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
 
@@ -260,10 +260,14 @@ constructor(
         // Unsuccessful login. Don't print.
         if (serverName == null) return
 
-        // Remove timezone
-        tzBot.removePlayer(event.player.uniqueId)
-        // Remove cached UUID
-        chatXPHandler.deleteEntry(event.player.uniqueId)
+        server.scheduler.buildTask(this) { ->
+            if(server.getPlayer(event.player.uniqueId) != null) return@buildTask
+
+            tzBot.removePlayer(event.player.uniqueId)
+            chatXPHandler.deleteEntry(event.player.uniqueId)
+        }
+            .delay(30L, TimeUnit.SECONDS)
+            .schedule()
 
         val name = event.player.username
         sendEvt(makeJoinQuit(username = name, serverName = serverName, type = "Quit"))

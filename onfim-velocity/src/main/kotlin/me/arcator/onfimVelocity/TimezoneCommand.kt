@@ -1,4 +1,4 @@
-package me.arcator.onfimVelocity.timezone
+package me.arcator.onfimVelocity
 
 import com.m3z0id.tzbot4j.TZBot4J
 import com.m3z0id.tzbot4j.tzLib.net.TZRequest
@@ -15,7 +15,6 @@ import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
-import me.arcator.onfimVelocity.chatXP.ChatXPHandler
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -138,6 +137,7 @@ class TimezoneCommand(
                 Component.text("Linked successfully with $accoutLinked on Discord!")
                     .color(NamedTextColor.GREEN),
             )
+            chatXPHandler.deleteFromNotLinked(source.uniqueId)
             chatXPHandler.addUUID(source.uniqueId, accoutLinked.toLong())
         } else {
             source.sendMessage(Component.text("Your code has timed out!").color(NamedTextColor.RED))
