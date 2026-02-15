@@ -1,6 +1,10 @@
 package me.arcator.onfimLib.out
 
+import com.sun.nio.sctp.MessageInfo
+import com.sun.nio.sctp.SctpMultiChannel
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
+import java.nio.channels.UnresolvedAddressException
 import me.arcator.onfimLib.utils.SELF_PORT
 import me.arcator.onfimLib.utils.hostname
 
@@ -9,7 +13,7 @@ typealias Host = Pair<String, Port>
 typealias HostMap = HashMap<String, Array<Host>>
 
 internal data class SocketManager(
-    private val unicastImpl: UnicastInterface,
+    private val socket: SctpMultiChannel,
     private val log: (String) -> Unit,
 ) {
     companion object {
@@ -34,8 +38,12 @@ internal data class SocketManager(
 
     fun unicast(packed: ByteArray, h: Host) {
         try {
-            // log("Sent ${unicastImpl.type} $h")
-            unicastImpl.send(packed, InetSocketAddress(h.first, h.second))
+            synchronized(socket) {
+                socket.send(ByteBuffer.wrap(packed), MessageInfo.createOutgoing(InetSocketAddress(h.first, h.second), 0))
+            }
+        } catch (e: UnresolvedAddressException) {
+            System.err.println("Could not find ${h.first}")
+            e.printStackTrace()
         } catch (e: Exception) {
             e.printStackTrace()
         }

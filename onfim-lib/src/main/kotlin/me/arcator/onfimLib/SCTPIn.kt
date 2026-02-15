@@ -8,11 +8,12 @@ import java.net.BindException
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
+import java.nio.channels.SelectionKey
 import me.arcator.onfimLib.utils.SELF_PORT
 import me.arcator.onfimLib.utils.bind_ip
 
 @Suppress("unused")
-class SCTPIn(private val read: (String, ByteArray) -> Unit) : Runnable {
+class SCTPIn(private val read: (ByteArray) -> Unit) : Runnable {
     private var active = true
     private val length = 30000
     private val assocHandler = object : AbstractNotificationHandler<PrintStream>() {}
@@ -30,9 +31,16 @@ class SCTPIn(private val read: (String, ByteArray) -> Unit) : Runnable {
             break
         }
 
+        ds.configureBlocking(false)
+        val selector = ds.provider().openSelector()
+        ds.register(selector, SelectionKey.OP_READ)
+
         var closedCount = 0
         while (active && closedCount < 10) {
             try {
+                if (selector.select(1000) == 0) continue
+                selector.selectedKeys().clear()
+
                 val buf = ByteBuffer.allocateDirect(length)
                 ds.receive(buf, System.out, assocHandler)
 
@@ -40,13 +48,14 @@ class SCTPIn(private val read: (String, ByteArray) -> Unit) : Runnable {
                 buf.rewind()
                 val arr = ByteArray(actualLength)
                 buf.get(arr, 0, actualLength)
-                read("SCTP", arr)
+                read(arr)
             } catch (e: ClosedChannelException) {
                 closedCount += 1
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+        selector.close()
         ds.close()
         println("Shutdown sctp In")
     }

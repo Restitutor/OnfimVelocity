@@ -26,7 +26,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
 import me.arcator.onfimLib.SCTPIn
-import me.arcator.onfimLib.UDPIn
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.ChatUser
 import me.arcator.onfimLib.format.EventLocation
@@ -63,16 +62,17 @@ constructor(
     private val noImage = PersistSet(dataDirectory.resolve("no-image.txt"))
     private val cs = ChatSender(server, noImage.players, noRelay.players, tzBot)
 
-    private val unpacker = Unpacker(cs, logger::info)
-    private val uListener = UDPIn(unpacker::read)
-    private val sListener = SCTPIn(unpacker::read)
+    private val sListener: SCTPIn = SCTPIn(this::onRead)
+    private val unpacker: Unpacker = Unpacker(cs, logger::info, sListener.ds)
     private val ds: Dispatcher =
-        Dispatcher(logger::info, uListener::port, sListener::port, sListener.ds, uListener.ds)
+        Dispatcher(logger::info, sListener::port, sListener.ds)
+
+    private fun onRead(data: ByteArray) = unpacker.read(data)
 
     private val lastServer = HashMap<UUID, String>()
 
     init {
-        unpacker.initialize(uListener.ds, ds::getHeartbeat)
+        unpacker.initialize(ds::getHeartbeat)
     }
 
     @Subscribe(priority = -99)
@@ -81,7 +81,6 @@ constructor(
 
         server.scheduler.buildTask(this) { -> ds.pingAll() }.repeat(30, TimeUnit.SECONDS).schedule()
         server.scheduler.buildTask(this, sListener).schedule()
-        server.scheduler.buildTask(this, uListener).schedule()
 
         server.commandManager.register(
             server.commandManager.metaBuilder("toggleimage").plugin(this).build(),
@@ -129,7 +128,6 @@ constructor(
     fun onProxyShutdown(event: ProxyShutdownEvent) {
         logger.info("[OnfimVelocity] Shutting down!")
         sListener.disable()
-        uListener.disable()
         noRelay.save()
         noImage.save()
         chatXPHandler.close()

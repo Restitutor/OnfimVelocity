@@ -68,7 +68,7 @@ class Chat(
 
     private fun inGame() =
         ((platform == "Discord" && room.id in DISCORD_CHANNELS) ||
-            (platform == "Onfim" && room.id == "#arcator") ||
+            (platform == "BotResponse" && room.id == "#arcator") ||
             (platform == "Matrix" && room.id == System.getenv("MATRIX_MAIN_CHANNEL")) ||
             platform == "In-Game")
 
@@ -84,7 +84,7 @@ class Chat(
 
         return when (platform) {
             "In-Game" -> NamedTextColor.GOLD
-            "Onfim" -> NamedTextColor.YELLOW
+            "BotResponse" -> NamedTextColor.YELLOW
             "Discord" ->
                 if (user.bot) NamedTextColor.BLUE else TextColor.fromCSSHexString("#5865F2")!!
 

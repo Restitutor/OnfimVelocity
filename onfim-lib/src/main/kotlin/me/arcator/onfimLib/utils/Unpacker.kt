@@ -2,9 +2,10 @@ package me.arcator.onfimLib.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
+import com.sun.nio.sctp.MessageInfo
+import com.sun.nio.sctp.SctpMultiChannel
+import java.net.InetSocketAddress
+import java.nio.ByteBuffer
 import java.util.*
 import me.arcator.onfimLib.format.Chat
 import me.arcator.onfimLib.format.Heartbeat
@@ -19,20 +20,20 @@ import org.msgpack.jackson.dataformat.MessagePackFactory
 class Unpacker(
     private val chatSender: ChatSenderInterface,
     private val logger: ((String) -> Unit),
+    private val sctpSocket: SctpMultiChannel,
 ) {
     private val objectMapper = ObjectMapper(MessagePackFactory()).registerKotlinModule()
     private val seenUuids = ArrayDeque<Int>()
     private var onHeartbeat: ((Heartbeat) -> Unit)? = null
-    private lateinit var ds: DatagramSocket
+    private val consoleAddress = InetSocketAddress("apollo", 2525)
 
     @Suppress("unused")
-    fun initialize(socket: DatagramSocket, listener: ((Heartbeat) -> Unit)) {
-        ds = socket
+    fun initialize(listener: ((Heartbeat) -> Unit)) {
         onHeartbeat = listener
     }
 
     @Suppress("unused")
-    fun read(protocol: String, serialized: ByteArray) {
+    fun read(serialized: ByteArray) {
         val meta = objectMapper.readValue(serialized, SerializedEvent::class.java)
         val evtType = meta.type
 
@@ -57,20 +58,18 @@ class Unpacker(
 
             seenUuids.addLast(meta.id)
             while (seenUuids.size > 50) seenUuids.removeFirst()
-            sendUdpMessage(serialized)
+            sendMessage(serialized)
         }
     }
 
-    fun sendUdpMessage(serialized: ByteArray) {
+    fun sendMessage(serialized: ByteArray) {
         // Relay it to the web console backend for visualizing
-        val ipAddress = InetAddress.getByName("apollo")
         try {
-            // Bind socket
-            synchronized(this) { ->
-                // Destination address and port
-                val packet = DatagramPacket(serialized, serialized.size, ipAddress, 2525)
-                ds.send(packet)
-                // logger("Message sent to $host:2525 ${serialized.size}")
+            synchronized(sctpSocket) {
+                sctpSocket.send(
+                    ByteBuffer.wrap(serialized),
+                    MessageInfo.createOutgoing(consoleAddress, 0),
+                )
             }
         } catch (e: Exception) {
             e.printStackTrace()
