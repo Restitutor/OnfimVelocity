@@ -19,7 +19,7 @@ import org.msgpack.jackson.dataformat.MessagePackFactory
 
 class Unpacker(
     private val chatSender: ChatSenderInterface,
-    private val logger: ((String) -> Unit),
+    private val logger: ((String) -> Unit), // purely for debugging
     private val sctpSocket: SctpMultiChannel,
 ) {
     private val objectMapper = ObjectMapper(MessagePackFactory()).registerKotlinModule()

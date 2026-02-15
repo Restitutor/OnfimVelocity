@@ -8,7 +8,7 @@ import com.m3z0id.tzbot4j.tzLib.net.c2s.UserIDFromUUIDData
 import java.net.SocketException
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -57,14 +57,16 @@ class ChatXPHandler(tzbot: TZBot4J) {
 
     private fun fetchDiscordId(uuid: UUID) {
         val resp = tzbot.queueRequest(TZRequest(UserIDFromUUIDData(uuid)))
-        resp.whenComplete(BiConsumer { response: TZResponse?, err: Throwable? ->
-            if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) {
-                notLinked.add(uuid)
-                return@BiConsumer
-            }
+        resp.whenComplete(
+            BiConsumer { response: TZResponse?, err: Throwable? ->
+                if ((err != null && !response!!.isSuccessful) || response?.asLong == 0L) {
+                    notLinked.add(uuid)
+                    return@BiConsumer
+                }
 
-            discordIdUUIDMap[uuid] = response!!.asLong
-        })
+                discordIdUUIDMap[uuid] = response!!.asLong
+            },
+        )
     }
 
     fun addXP(uuid: UUID) {
@@ -82,7 +84,12 @@ class ChatXPHandler(tzbot: TZBot4J) {
     }
 
     fun startInvalidating() {
-        invalidateScheduler.scheduleAtFixedRate({ discordIdUUIDMap.clear(); notLinked.clear() }, 10L, 10L, TimeUnit.MINUTES)
+        invalidateScheduler.scheduleAtFixedRate(
+            { discordIdUUIDMap.clear(); notLinked.clear() },
+            10L,
+            10L,
+            TimeUnit.MINUTES,
+        )
     }
 
     fun isInvalidatorRunning(): Boolean {

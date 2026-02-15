@@ -40,8 +40,6 @@ import me.arcator.onfimLib.format.makeJoinQuit
 import me.arcator.onfimLib.format.makeSwitch
 import me.arcator.onfimLib.out.Dispatcher
 import me.arcator.onfimLib.utils.Unpacker
-import me.arcator.onfimVelocity.ChatXPHandler
-import me.arcator.onfimVelocity.TimezoneCommand
 import net.kyori.adventure.text.Component
 import org.slf4j.Logger
 
@@ -55,7 +53,8 @@ constructor(
     private val logger: Logger,
     @DataDirectory private val dataDirectory: Path,
 ) {
-    private val tzBot = TZBot4J.init(logger, Config.get(dataDirectory.toFile()), TZFlag.AES, TZFlag.MSGPACK)
+    private val tzBot =
+        TZBot4J.init(logger, Config.get(dataDirectory.toFile()), TZFlag.AES, TZFlag.MSGPACK)
     private val isOnlinePredicate = Predicate<UUID> { uuid -> server.getPlayer(uuid).isPresent }
     private val chatXPHandler = ChatXPHandler(tzBot)
     private val noRelay = PersistSet(dataDirectory.resolve("no-relay.txt"))
@@ -259,7 +258,7 @@ constructor(
         if (serverName == null) return
 
         server.scheduler.buildTask(this) { ->
-            if(server.getPlayer(event.player.uniqueId) != null) return@buildTask
+            if (server.getPlayer(event.player.uniqueId) != null) return@buildTask
 
             tzBot.removePlayer(event.player.uniqueId)
             chatXPHandler.deleteEntry(event.player.uniqueId)
@@ -270,6 +269,6 @@ constructor(
         val name = event.player.username
         sendEvt(makeJoinQuit(username = name, serverName = serverName, type = "Quit"))
 
-        if(server.playerCount == 0 && chatXPHandler.isInvalidatorRunning()) chatXPHandler.stopInvalidating()
+        if (server.playerCount == 0 && chatXPHandler.isInvalidatorRunning()) chatXPHandler.stopInvalidating()
     }
 }

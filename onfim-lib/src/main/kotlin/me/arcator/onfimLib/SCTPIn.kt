@@ -9,6 +9,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
 import java.nio.channels.SelectionKey
+import java.nio.channels.spi.SelectorProvider
 import me.arcator.onfimLib.utils.SELF_PORT
 import me.arcator.onfimLib.utils.bind_ip
 
@@ -32,7 +33,7 @@ class SCTPIn(private val read: (ByteArray) -> Unit) : Runnable {
         }
 
         ds.configureBlocking(false)
-        val selector = ds.provider().openSelector()
+        val selector = SelectorProvider.provider().openSelector()
         ds.register(selector, SelectionKey.OP_READ)
 
         var closedCount = 0
@@ -45,6 +46,7 @@ class SCTPIn(private val read: (ByteArray) -> Unit) : Runnable {
                 ds.receive(buf, System.out, assocHandler)
 
                 val actualLength = buf.position()
+                if (actualLength == 0) continue
                 buf.rewind()
                 val arr = ByteArray(actualLength)
                 buf.get(arr, 0, actualLength)

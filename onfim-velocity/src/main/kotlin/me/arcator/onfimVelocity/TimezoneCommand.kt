@@ -39,7 +39,7 @@ class TimezoneCommand(
                 BrigadierCommand.literalArgumentBuilder("unlink")
                     .executes { ctx: CommandContext<CommandSource> -> unlink(ctx.source) },
 
-            )
+                )
             .then(
                 BrigadierCommand.literalArgumentBuilder("refreshTimezone")
                     .executes { ctx: CommandContext<CommandSource> -> refreshTimezone(ctx.source) },
@@ -153,9 +153,10 @@ class TimezoneCommand(
             return Command.SINGLE_SUCCESS
         }
 
-        if(checkIfLinked(source.uniqueId) == null) {
+        if (checkIfLinked(source.uniqueId) == null) {
             source.sendMessage(
-                Component.text("You aren't linked to any account on Discord!").color(NamedTextColor.RED),
+                Component.text("You aren't linked to any account on Discord!")
+                    .color(NamedTextColor.RED),
             )
             return Command.SINGLE_SUCCESS
         }

@@ -39,7 +39,10 @@ internal data class SocketManager(
     fun unicast(packed: ByteArray, h: Host) {
         try {
             synchronized(socket) {
-                socket.send(ByteBuffer.wrap(packed), MessageInfo.createOutgoing(InetSocketAddress(h.first, h.second), 0))
+                socket.send(
+                    ByteBuffer.wrap(packed),
+                    MessageInfo.createOutgoing(InetSocketAddress(h.first, h.second), 0),
+                )
             }
         } catch (e: UnresolvedAddressException) {
             System.err.println("Could not find ${h.first}")
