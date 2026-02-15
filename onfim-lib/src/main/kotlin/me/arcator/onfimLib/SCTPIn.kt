@@ -2,6 +2,7 @@ package me.arcator.onfimLib
 
 import com.sun.nio.sctp.AbstractNotificationHandler
 import com.sun.nio.sctp.SctpMultiChannel
+import com.sun.nio.sctp.SctpStandardSocketOptions
 import java.io.PrintStream
 import java.net.BindException
 import java.net.InetSocketAddress
@@ -21,6 +22,7 @@ class SCTPIn(private val read: (String, ByteArray) -> Unit) : Runnable {
         while (active) {
             try {
                 ds.bind(InetSocketAddress(bind_ip, SELF_PORT))
+                ds.setOption(SctpStandardSocketOptions.SCTP_NODELAY, true, null)
             } catch (e: BindException) {
                 Thread.sleep(30000)
                 continue
