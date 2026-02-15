@@ -45,4 +45,4 @@ internal val s_id: Int =
 internal const val SELF_PORT = 2403
 internal const val RELAY_PORT = 2520
 val nodeNameS = "BG mcsa@$hostname"
-val bind_ip = "10.0.0.$s_id"
+val bind_ip = "10.0.1.$s_id"
